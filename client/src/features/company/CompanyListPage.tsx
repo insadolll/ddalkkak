@@ -184,9 +184,11 @@ export default function CompanyListPage() {
         </div>
       )}
 
-      {/* Detail panel */}
+      {/* Detail panel — center overlay */}
       {selected && (
-        <div className="bg-white/90 backdrop-blur-xl border border-white/30 rounded-2xl shadow-lg p-6">
+        <div className="fixed inset-0 z-40 flex items-center justify-center" onClick={() => setSelectedId(null)}>
+          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" />
+          <div className="relative bg-white/95 backdrop-blur-2xl border border-white/30 rounded-[20px] shadow-2xl p-6 w-full max-w-2xl max-h-[80vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-bold text-slate-800">{selected.name}</h3>
             <div className="flex items-center gap-2">
@@ -221,6 +223,7 @@ export default function CompanyListPage() {
               </div>
             </div>
           )}
+          </div>
         </div>
       )}
 
