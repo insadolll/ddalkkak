@@ -7,6 +7,7 @@ import {
   confirmQuotation, voidQuotation, createRevision, getRevisions,
   duplicateQuotation, generateSalesFromPurchase,
 } from './quotation.controller';
+import { downloadQuotationExcel } from './quotation-export.controller';
 
 const router = Router();
 
@@ -24,5 +25,8 @@ router.post('/:id/revision', authenticate, createRevision);
 router.get('/:id/revisions', authenticate, getRevisions);
 router.post('/:id/duplicate', authenticate, duplicateQuotation);
 router.post('/:id/generate-sales', authenticate, requireRole('ADMIN', 'MANAGER'), generateSalesFromPurchase);
+
+// Export
+router.get('/:id/excel', authenticate, downloadQuotationExcel);
 
 export default router;
