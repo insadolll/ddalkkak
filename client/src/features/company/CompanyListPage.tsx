@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Search, Plus, Building2, Pencil, Trash2, User, Phone, Mail } from 'lucide-react';
+import { Search, Plus, Building2, Pencil, Trash2, User, Phone, Mail, MapPin, FileText, X } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import api from '@/services/api';
 import CompanyLookupModal from '@/components/CompanyLookupModal';
@@ -31,6 +31,7 @@ export default function CompanyListPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [showLookup, setShowLookup] = useState(false);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState({ name: '', bizNumber: '', representative: '', address: '', phone: '', taxEmail: '', memo: '' });
   const [showForm, setShowForm] = useState(false);
@@ -101,6 +102,7 @@ export default function CompanyListPage() {
 
   const isAdmin = user?.role === 'ADMIN';
   const canEdit = isAdmin || user?.role === 'MANAGER';
+  const selected = companies.find(c => c.id === selectedId);
 
   return (
     <div className="space-y-6">
@@ -130,7 +132,7 @@ export default function CompanyListPage() {
 
       {/* List */}
       {loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
           {[1,2,3].map(i => <div key={i} className="h-40 bg-white/80 rounded-2xl animate-pulse" />)}
         </div>
       ) : companies.length === 0 ? (
@@ -139,9 +141,9 @@ export default function CompanyListPage() {
           <p className="text-slate-400">거래처가 없습니다.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
           {companies.map(c => (
-            <div key={c.id} className="bg-white/80 backdrop-blur-xl border border-white/30 rounded-2xl p-4 shadow-sm hover:shadow-md hover:translate-y-[-2px] transition-all duration-300">
+            <div key={c.id} onClick={() => setSelectedId(c.id === selectedId ? null : c.id)} className={`bg-white/80 backdrop-blur-xl border rounded-2xl p-4 shadow-sm hover:shadow-md hover:translate-y-[-2px] transition-all duration-300 cursor-pointer ${c.id === selectedId ? 'border-primary/30 ring-1 ring-primary/10' : 'border-white/30'}`}>
               <div className="flex items-start justify-between mb-3">
                 <div>
                   <h3 className="font-semibold text-slate-800">{c.name}</h3>
@@ -179,6 +181,46 @@ export default function CompanyListPage() {
               )}
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Detail panel */}
+      {selected && (
+        <div className="bg-white/90 backdrop-blur-xl border border-white/30 rounded-2xl shadow-lg p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-bold text-slate-800">{selected.name}</h3>
+            <div className="flex items-center gap-2">
+              {canEdit && <button onClick={(e) => { e.stopPropagation(); openEdit(selected); }} className="px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-100 text-slate-600 hover:bg-slate-200 transition">수정</button>}
+              {isAdmin && <button onClick={(e) => { e.stopPropagation(); handleDelete(selected.id, selected.name); }} className="px-3 py-1.5 rounded-lg text-xs font-medium bg-red-50 text-red-500 hover:bg-red-100 transition">삭제</button>}
+              <button onClick={() => setSelectedId(null)} className="w-7 h-7 rounded-lg flex items-center justify-center hover:bg-slate-100">
+                <X className="w-4 h-4 text-slate-400" strokeWidth={1.75} />
+              </button>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+            {selected.bizNumber && <div className="flex items-center gap-2 text-slate-600"><FileText className="w-4 h-4 text-slate-400" strokeWidth={1.75} /><div><p className="text-[11px] text-slate-400">사업자번호</p><p className="font-mono">{selected.bizNumber}</p></div></div>}
+            {selected.representative && <div className="flex items-center gap-2 text-slate-600"><User className="w-4 h-4 text-slate-400" strokeWidth={1.75} /><div><p className="text-[11px] text-slate-400">대표자</p><p>{selected.representative}</p></div></div>}
+            {selected.phone && <div className="flex items-center gap-2 text-slate-600"><Phone className="w-4 h-4 text-slate-400" strokeWidth={1.75} /><div><p className="text-[11px] text-slate-400">전화번호</p><p>{selected.phone}</p></div></div>}
+            {selected.taxEmail && <div className="flex items-center gap-2 text-slate-600"><Mail className="w-4 h-4 text-slate-400" strokeWidth={1.75} /><div><p className="text-[11px] text-slate-400">세금계산서 이메일</p><p>{selected.taxEmail}</p></div></div>}
+          </div>
+          {selected.address && <div className="flex items-start gap-2 text-slate-500 mt-3 text-sm"><MapPin className="w-4 h-4 text-slate-400 mt-0.5 flex-shrink-0" strokeWidth={1.75} /><span>{selected.address}</span></div>}
+          {selected.memo && <p className="text-xs text-slate-400 bg-slate-50 rounded-lg p-2 mt-3">{selected.memo}</p>}
+          {selected.contacts.length > 0 && (
+            <div className="mt-4 pt-4 border-t border-slate-100">
+              <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">담당자 ({selected.contacts.length})</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+                {selected.contacts.map(ct => (
+                  <div key={ct.id} className="p-2.5 bg-slate-50/80 rounded-lg">
+                    <p className="text-sm font-medium text-slate-700">{ct.name}{ct.position ? ` (${ct.position})` : ''}</p>
+                    <div className="flex flex-wrap gap-x-3 mt-1">
+                      {ct.phone && <span className="text-xs text-slate-500">{ct.phone}</span>}
+                      {ct.email && <span className="text-xs text-slate-500">{ct.email}</span>}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
 
