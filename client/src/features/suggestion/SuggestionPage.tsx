@@ -6,7 +6,6 @@ import {
   Loader2,
   MessageSquarePlus,
   User,
-  CalendarDays,
   Eye,
   EyeOff,
 } from 'lucide-react';
