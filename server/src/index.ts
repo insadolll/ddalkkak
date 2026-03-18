@@ -23,6 +23,7 @@ import approvalRoutes from './modules/approval/routes';
 import calendarRoutes from './modules/calendar/routes';
 import meetingRoutes from './modules/meeting/routes';
 import suggestionRoutes from './modules/suggestion/routes';
+import departmentRoutes from './modules/department/department.routes';
 
 const app = express();
 const PORT = parseInt(process.env.PORT || '3001', 10);
@@ -65,6 +66,7 @@ app.use('/api/approvals', approvalRoutes);
 app.use('/api/calendar', calendarRoutes);
 app.use('/api/meetings', meetingRoutes);
 app.use('/api/suggestions', suggestionRoutes);
+app.use('/api/departments', departmentRoutes);
 
 // Serve static files (client build) in production
 if (process.env.NODE_ENV === 'production') {

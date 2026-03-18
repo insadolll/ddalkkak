@@ -186,7 +186,7 @@ export default function QuotationDropZone({ projectId, direction, onLinked }: Pr
             </div>
           </div>
 
-          <DragOverlay>
+          <DragOverlay dropAnimation={null} style={{ zIndex: 9999 }}>
             {activeItem ? <OverlayCard q={activeItem} /> : null}
           </DragOverlay>
         </DndContext>

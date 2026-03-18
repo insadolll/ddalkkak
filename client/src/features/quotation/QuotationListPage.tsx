@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import QuotationFormModal from './QuotationFormModal';
 import {
   Plus,
   Search,
@@ -84,6 +85,7 @@ export default function QuotationListPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { selectedCompanyId } = useAuth();
 
+  const [showCreateModal, setShowCreateModal] = useState(false);
   const [quotations, setQuotations] = useState<QuotationListItem[]>([]);
   const [pagination, setPagination] = useState<Pagination>({
     page: 1,
@@ -173,7 +175,7 @@ export default function QuotationListPage() {
           </p>
         </div>
         <button
-          onClick={() => navigate('/quotations?create=1')}
+          onClick={() => setShowCreateModal(true)}
           className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-white text-sm font-medium shadow-sm hover:shadow-md hover:brightness-110 transition-all"
         >
           <Plus className="w-4 h-4" strokeWidth={1.75} />새 견적서
@@ -347,6 +349,15 @@ export default function QuotationListPage() {
           </button>
         </div>
       )}
+
+      <QuotationFormModal
+        open={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        onSaved={() => {
+          setShowCreateModal(false);
+          window.location.reload();
+        }}
+      />
     </div>
   );
 }

@@ -357,7 +357,7 @@ export default function QuotationDetailPage() {
               <Download className="w-4 h-4" strokeWidth={1.75} />
               엑셀 다운로드
             </button>
-            {user?.role === 'ADMIN' && !data.isConfirmed && data.status !== 'VOID' && (
+            {user?.role === 'ADMIN' && (
               <button
                 onClick={handleDelete}
                 disabled={actionLoading}
