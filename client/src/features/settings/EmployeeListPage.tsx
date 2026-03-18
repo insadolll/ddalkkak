@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Search, Plus, UserCog, Building2 } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
 import api from '@/services/api';
 import EmployeeFormModal from './EmployeeFormModal';
 
@@ -19,18 +20,16 @@ interface Employee {
 const roleLabels: Record<string, string> = {
   ADMIN: '관리자',
   MANAGER: '매니저',
-  ACCOUNTANT: '경영지원',
   EMPLOYEE: '직원',
 };
 
 const roleColors: Record<string, string> = {
   ADMIN: 'bg-red-100 text-red-700',
   MANAGER: 'bg-teal-100 text-teal-700',
-  ACCOUNTANT: 'bg-violet-100 text-violet-700',
   EMPLOYEE: 'bg-slate-100 text-slate-600',
 };
 
-const roleFilters = ['', 'ADMIN', 'MANAGER', 'ACCOUNTANT', 'EMPLOYEE'];
+const roleFilters = ['', 'ADMIN', 'MANAGER', 'EMPLOYEE'];
 
 export default function EmployeeListPage() {
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -39,6 +38,8 @@ export default function EmployeeListPage() {
   const [roleFilter, setRoleFilter] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [editTarget, setEditTarget] = useState<Employee | null>(null);
+
+  const { selectedCompanyId } = useAuth();
 
   const fetchEmployees = useCallback(async () => {
     setLoading(true);
@@ -52,7 +53,7 @@ export default function EmployeeListPage() {
     setLoading(false);
   }, [search, roleFilter]);
 
-  useEffect(() => { fetchEmployees(); }, [fetchEmployees]);
+  useEffect(() => { fetchEmployees(); }, [fetchEmployees, selectedCompanyId]);
 
   const handleSaved = () => {
     setShowModal(false);

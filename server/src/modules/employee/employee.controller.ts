@@ -3,14 +3,22 @@ import { Prisma } from '@prisma/client';
 import bcrypt from 'bcrypt';
 import prisma from '../../utils/prisma';
 import { success, error, successList, parsePagination } from '../../utils/response';
+import { encrypt } from '../../utils/crypto';
 
 const employeeSelect = {
   id: true, employeeNo: true, email: true, name: true, role: true,
   position: true, phone: true, isActive: true, joinDate: true,
   ourCompanyId: true, departmentId: true, createdAt: true,
+  smtpPassword: true,
   ourCompany: { select: { id: true, code: true, name: true } },
   department: { select: { id: true, name: true } },
 } as const;
+
+// Strip actual password, return boolean flag
+function maskEmployee(emp: Record<string, unknown>) {
+  const { smtpPassword, ...rest } = emp;
+  return { ...rest, hasSmtpPassword: !!smtpPassword };
+}
 
 export async function listEmployees(req: Request, res: Response) {
   try {
@@ -35,7 +43,7 @@ export async function listEmployees(req: Request, res: Response) {
       prisma.employee.count({ where }),
     ]);
 
-    return successList(res, data, { page, limit, total, totalPages: Math.ceil(total / limit) });
+    return successList(res, data.map(d => maskEmployee(d as unknown as Record<string, unknown>)), { page, limit, total, totalPages: Math.ceil(total / limit) });
   } catch {
     return error(res, 'INTERNAL', '서버 오류가 발생했습니다', 500);
   }
@@ -48,7 +56,7 @@ export async function getEmployee(req: Request, res: Response) {
       select: employeeSelect,
     });
     if (!employee) return error(res, 'NOT_FOUND', '직원을 찾을 수 없습니다', 404);
-    return success(res, employee);
+    return success(res, maskEmployee(employee as unknown as Record<string, unknown>));
   } catch {
     return error(res, 'INTERNAL', '서버 오류가 발생했습니다', 500);
   }
@@ -77,12 +85,12 @@ export async function createEmployee(req: Request, res: Response) {
         phone: phone || null,
         ourCompanyId, departmentId,
         joinDate: joinDate ? new Date(joinDate) : new Date(),
-        smtpPassword: smtpPassword || null,
+        smtpPassword: smtpPassword ? encrypt(smtpPassword) : null,
       },
       select: employeeSelect,
     });
 
-    return success(res, employee, 201);
+    return success(res, maskEmployee(employee as unknown as Record<string, unknown>), 201);
   } catch {
     return error(res, 'INTERNAL', '서버 오류가 발생했습니다', 500);
   }
@@ -93,7 +101,7 @@ export async function updateEmployee(req: Request, res: Response) {
     const existing = await prisma.employee.findUnique({ where: { id: req.params.id } });
     if (!existing) return error(res, 'NOT_FOUND', '직원을 찾을 수 없습니다', 404);
 
-    const allowedFields = ['name', 'role', 'position', 'phone', 'ourCompanyId', 'departmentId', 'isActive', 'smtpPassword'];
+    const allowedFields = ['name', 'role', 'position', 'phone', 'ourCompanyId', 'departmentId', 'isActive'];
     const data: Record<string, unknown> = {};
     for (const field of allowedFields) {
       if (req.body[field] !== undefined) data[field] = req.body[field];
@@ -104,13 +112,18 @@ export async function updateEmployee(req: Request, res: Response) {
       data.passwordHash = await bcrypt.hash(req.body.password, 10);
     }
 
+    // SMTP password (encrypted)
+    if (req.body.smtpPassword) {
+      data.smtpPassword = encrypt(req.body.smtpPassword);
+    }
+
     const updated = await prisma.employee.update({
       where: { id: req.params.id },
       data,
       select: employeeSelect,
     });
 
-    return success(res, updated);
+    return success(res, maskEmployee(updated as unknown as Record<string, unknown>));
   } catch {
     return error(res, 'INTERNAL', '서버 오류가 발생했습니다', 500);
   }

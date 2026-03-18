@@ -45,7 +45,8 @@
       "Bash(git remote:*)",
       "Bash(git branch:*)",
       "Bash(git push:*)",
-      "Bash(sqlite3 prisma/dev.db \"SELECT * FROM departments;\")"
+      "Bash(sqlite3 prisma/dev.db \"SELECT * FROM departments;\")",
+      "Bash(PGPASSWORD='ddalkkak2026' psql -h 127.0.0.1 -U ddalkkak -d ddalkkak -c \"SELECT email, \\\\\"smtpPassword\\\\\" FROM employees WHERE \\\\\"smtpPassword\\\\\" IS NOT NULL LIMIT 5;\" 2>&1)"
     ]
   }
 }

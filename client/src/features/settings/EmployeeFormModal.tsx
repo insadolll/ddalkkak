@@ -11,6 +11,7 @@ interface Employee {
   position: string | null;
   phone: string | null;
   isActive: boolean;
+  hasSmtpPassword?: boolean;
   ourCompany: { id: string; code: string; name: string };
   department: { id: string; name: string };
 }
@@ -37,7 +38,20 @@ export default function EmployeeFormModal({ employee, onClose, onSaved }: Props)
   useEffect(() => {
     api.get('/our-companies').then(r => setCompanies(r.data.data)).catch(() => {});
     api.get('/employees/departments').then(r => setDepartments(r.data.data)).catch(() => {});
-  }, []);
+    // Auto-generate employee number for new employees
+    if (!employee) {
+      api.get('/employees', { params: { limit: 1000 } }).then(r => {
+        const year = new Date().getFullYear();
+        const existing = (r.data.data as Array<{ employeeNo: string }>)
+          .map(e => e.employeeNo)
+          .filter(no => no.startsWith(`${year}-`))
+          .map(no => parseInt(no.split('-')[1], 10))
+          .filter(n => !isNaN(n));
+        const next = existing.length > 0 ? Math.max(...existing) + 1 : 1;
+        setForm(f => ({ ...f, employeeNo: `${year}-${String(next).padStart(3, '0')}` }));
+      }).catch(() => {});
+    }
+  }, [employee]);
 
   useEffect(() => {
     if (employee) {
@@ -126,13 +140,12 @@ export default function EmployeeFormModal({ employee, onClose, onSaved }: Props)
             <select value={form.role} onChange={e => set('role', e.target.value)} className="w-full px-3 py-2.5 bg-white/60 border border-gray-200 rounded-[10px] text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none">
               <option value="EMPLOYEE">직원</option>
               <option value="MANAGER">매니저</option>
-              <option value="ACCOUNTANT">경영지원</option>
               <option value="ADMIN">관리자</option>
             </select>
           </div>
           <Field label="직위" value={form.position} onChange={v => set('position', v)} />
           <Field label="전화번호" value={form.phone} onChange={v => set('phone', v)} />
-          <Field label="메일 비밀번호 (SMTP)" value={form.smtpPassword} onChange={v => set('smtpPassword', v)} type="password" placeholder="메일 발송용" />
+          <Field label="메일 비밀번호 (SMTP)" value={form.smtpPassword} onChange={v => set('smtpPassword', v)} type="password" placeholder={employee?.hasSmtpPassword ? '●●●● 설정됨 (변경 시 입력)' : '메일 발송용'} />
           {!isEdit && <Field label="입사일" value={form.joinDate} onChange={v => set('joinDate', v)} type="date" />}
           <div>
             <label className="block text-xs font-medium text-slate-500 mb-1">소속 회사 *</label>

@@ -1,5 +1,6 @@
 import nodemailer from 'nodemailer';
 import prisma from './prisma';
+import { decrypt } from './crypto';
 
 interface MailOptions {
   senderId: string;       // Employee ID (sender)
@@ -41,7 +42,7 @@ export async function sendMail(options: MailOptions): Promise<boolean> {
     secure: company.smtpPort === 465,
     auth: {
       user: employee.email,
-      pass: employee.smtpPassword,
+      pass: decrypt(employee.smtpPassword),
     },
   });
 

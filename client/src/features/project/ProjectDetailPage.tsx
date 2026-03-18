@@ -481,7 +481,8 @@ export default function ProjectDetailPage() {
               {filteredQuotations.map((q) => (
                 <div
                   key={q.id}
-                  className="p-4 bg-slate-50/60 rounded-xl border border-slate-100 hover:border-slate-200 transition-all"
+                  onClick={() => navigate(`/quotations/${q.id}`)}
+                  className="p-4 bg-slate-50/60 rounded-xl border border-slate-100 hover:border-slate-200 hover:shadow-sm cursor-pointer transition-all"
                 >
                   <div className="flex items-center justify-between mb-2">
                     <p className="text-sm font-medium text-slate-700 font-mono">

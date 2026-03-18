@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import prisma from '../../utils/prisma';
 import { success, error } from '../../utils/response';
+import { encrypt } from '../../utils/crypto';
 
 export async function listOurCompanies(_req: Request, res: Response) {
   try {
@@ -64,9 +65,12 @@ export async function updateOurCompany(req: Request, res: Response) {
     ];
 
     const data: Record<string, unknown> = {};
+    const encryptedFields = ['smtpPassword', 'imapPassword'];
     for (const field of allowedFields) {
       if (req.body[field] !== undefined) {
-        data[field] = req.body[field];
+        data[field] = encryptedFields.includes(field) && req.body[field]
+          ? encrypt(req.body[field])
+          : req.body[field];
       }
     }
 
