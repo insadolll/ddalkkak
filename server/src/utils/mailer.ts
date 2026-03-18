@@ -2,7 +2,7 @@ import nodemailer from 'nodemailer';
 import prisma from './prisma';
 
 interface MailOptions {
-  ourCompanyId: string;
+  senderId: string;       // Employee ID (sender)
   to: string | string[];
   cc?: string | string[];
   subject: string;
@@ -15,16 +15,24 @@ interface MailOptions {
 }
 
 /**
- * Send email using the company's SMTP settings from DB.
- * Returns true on success, throws on failure.
+ * Send email using company SMTP server + employee credentials.
+ * - SMTP host/port from OurCompany
+ * - Auth credentials from Employee (email + smtpPassword)
  */
 export async function sendMail(options: MailOptions): Promise<boolean> {
-  const company = await prisma.ourCompany.findUnique({
-    where: { id: options.ourCompanyId },
+  const employee = await prisma.employee.findUnique({
+    where: { id: options.senderId },
+    include: { ourCompany: true },
   });
 
-  if (!company?.smtpHost || !company?.smtpUser || !company?.smtpPassword) {
-    throw new Error(`SMTP 설정이 완료되지 않았습니다 (${company?.code || 'unknown'})`);
+  if (!employee) throw new Error('발신자를 찾을 수 없습니다');
+
+  const company = employee.ourCompany;
+  if (!company.smtpHost) {
+    throw new Error(`SMTP 서버가 설정되지 않았습니다 (${company.code})`);
+  }
+  if (!employee.smtpPassword) {
+    throw new Error(`메일 비밀번호가 설정되지 않았습니다. 설정 → 직원 관리에서 SMTP 비밀번호를 입력해주세요.`);
   }
 
   const transporter = nodemailer.createTransport({
@@ -32,14 +40,12 @@ export async function sendMail(options: MailOptions): Promise<boolean> {
     port: company.smtpPort || 587,
     secure: company.smtpPort === 465,
     auth: {
-      user: company.smtpUser,
-      pass: company.smtpPassword,
+      user: employee.email,
+      pass: employee.smtpPassword,
     },
   });
 
-  const from = company.smtpFromName
-    ? `"${company.smtpFromName}" <${company.smtpUser}>`
-    : company.smtpUser;
+  const from = `"${employee.name} (${company.name})" <${employee.email}>`;
 
   await transporter.sendMail({
     from,

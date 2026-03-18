@@ -60,7 +60,7 @@ export async function sendQuotationMail(req: Request, res: Response) {
     });
 
     await sendMail({
-      ourCompanyId: quotation.ourCompanyId,
+      senderId: req.user!.id,
       to,
       cc,
       subject: emailSubject,
@@ -121,7 +121,7 @@ export async function sendInvoiceRequest(req: Request, res: Response) {
     });
 
     await sendMail({
-      ourCompanyId: invoice.ourCompanyId,
+      senderId: req.user!.id,
       to: recipient.email,
       subject: `[계산서 처리 요청] ${invoice.project?.name || ''}`,
       html,

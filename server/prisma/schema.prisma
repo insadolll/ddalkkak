@@ -225,6 +225,9 @@ model Employee {
   departmentId String
   department   Department @relation(fields: [departmentId], references: [id])
 
+  // Mail (per-user SMTP auth)
+  smtpPassword String?
+
   // Security
   failedLoginAttempts Int       @default(0)
   lockedUntil         DateTime?

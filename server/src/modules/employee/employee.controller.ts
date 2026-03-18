@@ -56,7 +56,7 @@ export async function getEmployee(req: Request, res: Response) {
 
 export async function createEmployee(req: Request, res: Response) {
   try {
-    const { employeeNo, email, password, name, role, position, phone, ourCompanyId, departmentId, joinDate } = req.body;
+    const { employeeNo, email, password, name, role, position, phone, ourCompanyId, departmentId, joinDate, smtpPassword } = req.body;
     if (!employeeNo || !email || !password || !name || !ourCompanyId || !departmentId) {
       return error(res, 'VALIDATION', '필수 항목을 모두 입력해주세요', 400);
     }
@@ -77,6 +77,7 @@ export async function createEmployee(req: Request, res: Response) {
         phone: phone || null,
         ourCompanyId, departmentId,
         joinDate: joinDate ? new Date(joinDate) : new Date(),
+        smtpPassword: smtpPassword || null,
       },
       select: employeeSelect,
     });
@@ -92,7 +93,7 @@ export async function updateEmployee(req: Request, res: Response) {
     const existing = await prisma.employee.findUnique({ where: { id: req.params.id } });
     if (!existing) return error(res, 'NOT_FOUND', '직원을 찾을 수 없습니다', 404);
 
-    const allowedFields = ['name', 'role', 'position', 'phone', 'ourCompanyId', 'departmentId', 'isActive'];
+    const allowedFields = ['name', 'role', 'position', 'phone', 'ourCompanyId', 'departmentId', 'isActive', 'smtpPassword'];
     const data: Record<string, unknown> = {};
     for (const field of allowedFields) {
       if (req.body[field] !== undefined) data[field] = req.body[field];
