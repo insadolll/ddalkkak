@@ -1,3 +1,7 @@
+// DDalKKak v2 Prisma Schema
+// DB: PostgreSQL 16
+// v1 models migrated + v2 new models
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -7,21 +11,1241 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Placeholder — full schema will be added in Phase 1
-model User {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique
-  name      String
-  password  String
-  role      Role     @default(EMPLOYEE)
-  active    Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
+// ─── Enums ──────────────────────────────────────────────────────────────────
 
 enum Role {
   ADMIN
   MANAGER
   ACCOUNTANT
   EMPLOYEE
+}
+
+enum ProjectStatus {
+  ACTIVE
+  ON_HOLD
+  COMPLETED
+  CANCELLED
+}
+
+enum ProjectStage {
+  SETUP
+  QUOTE_RECEIVED
+  QUOTE_SENT
+  ORDER_CONFIRMED
+  DELIVERY
+  INVOICE
+  DONE
+}
+
+enum Direction {
+  SALES
+  PURCHASE
+}
+
+enum QuotationStatus {
+  DRAFT
+  SENT
+  CONFIRMED
+  VOID
+}
+
+enum InvoiceStatus {
+  NOT_ISSUED
+  REQUESTED
+  ISSUED
+  PAID
+}
+
+enum CreditNoteReason {
+  CONTRACT_CHANGE
+  RETURN
+  PRICE_ADJUST
+  ERROR_CORRECTION
+  OTHER
+}
+
+enum POStatus {
+  DRAFT
+  SENT
+  ACKNOWLEDGED
+}
+
+enum CreditNoteStatus {
+  NOT_ISSUED
+  REQUESTED
+  ISSUED
+}
+
+enum MailStatus {
+  PENDING
+  REGISTERED
+  IGNORED
+}
+
+enum DocType {
+  COA
+  MSDS
+  IMPORT_CERT
+  LICENSE
+  CONTRACT
+  OTHER
+}
+
+enum MemoType {
+  MEMO
+  STAGE_CHANGE
+  SYSTEM
+}
+
+enum LeaveType {
+  ANNUAL
+  SICK
+  HALF
+  OTHER
+}
+
+enum LeaveStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+enum ApprovalStatus {
+  DRAFT
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum StepStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum EventType {
+  PERSONAL
+  TEAM
+  COMPANY
+}
+
+enum MeetingType {
+  WEEKLY
+  MONTHLY
+}
+
+// ─── OurCompany (우리 회사) ──────────────────────────────────────────────────
+
+model OurCompany {
+  id               String   @id @default(cuid())
+  code             String   @unique
+  name             String
+  nameEn           String?
+  bizNumber        String?
+  representative   String?
+  address          String?
+  phone            String?
+  fax              String?
+  email            String?
+  domain           String?
+  logoPath         String?
+  stampPath        String?
+
+  // SMTP
+  smtpHost         String?
+  smtpPort         Int?     @default(587)
+  smtpUser         String?
+  smtpPassword     String?
+  smtpFromName     String?
+
+  // Document prefixes
+  quotationPrefix  String   @default("Q")
+  poPrefix         String   @default("PO")
+  dsPrefix         String   @default("DS")
+
+  // IMAP
+  imapHost         String?
+  imapPort         Int?     @default(993)
+  imapUser         String?
+  imapPassword     String?
+  imapFolder       String?  @default("견적수신")
+  imapEnabled      Boolean  @default(false)
+
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  employees          Employee[]
+  projects           Project[]
+  quotations         Quotation[]
+  purchaseOrders     PurchaseOrder[]
+  invoices           Invoice[]
+  singleTransactions SingleTransaction[]
+  numberSequences    NumberSequence[]
+  receivedMails      ReceivedMail[]
+  transactionStatements TransactionStatement[]
+
+  @@map("our_companies")
+}
+
+// ─── Department ─────────────────────────────────────────────────────────────
+
+model Department {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  employees      Employee[]
+  calendarEvents CalendarEvent[]
+
+  @@index([name])
+  @@map("departments")
+}
+
+// ─── Employee ───────────────────────────────────────────────────────────────
+
+model Employee {
+  id           String   @id @default(cuid())
+  employeeNo   String   @unique
+  email        String   @unique
+  passwordHash String
+  name         String
+  role         Role     @default(EMPLOYEE)
+  position     String?
+  phone        String?
+  isActive     Boolean  @default(true)
+  joinDate     DateTime
+
+  // Company (v2: FK instead of string)
+  ourCompanyId String
+  ourCompany   OurCompany @relation(fields: [ourCompanyId], references: [id])
+
+  departmentId String
+  department   Department @relation(fields: [departmentId], references: [id])
+
+  // Security
+  failedLoginAttempts Int       @default(0)
+  lockedUntil         DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // v1 relations
+  leaveBalance      LeaveBalance?
+  leaves            Leave[]           @relation("EmployeeLeaves")
+  reviewedLeaves    Leave[]           @relation("ReviewerLeaves")
+  approvalDocuments ApprovalDocument[]
+  approvalSteps     ApprovalStep[]
+  calendarEvents    CalendarEvent[]
+  refreshTokens     RefreshToken[]
+  meetingsCreated   Meeting[]           @relation("MeetingCreator")
+  meetingWorkItems  MeetingWorkItem[]   @relation("WorkItemAuthor")
+  meetingPlanItems  MeetingPlanItem[]   @relation("PlanItemAuthor")
+  meetingIssues     MeetingIssue[]      @relation("IssueAuthor")
+  meetingDecisions  MeetingDecision[]   @relation("DecisionAuthor")
+  monthlyReports    MonthlyReport[]     @relation("MonthlyReportAuthor")
+  expenseRecords    ExpenseRecord[]     @relation("ExpenseUploader")
+  suggestions       Suggestion[]        @relation("SuggestionAuthor")
+  itAssets          ITAsset[]           @relation("AssetCreator")
+  passwordHistory   PasswordHistory[]
+  signatureProfile  SignatureProfile?
+  createdCompanies       Company[]        @relation("CompanyCreator")
+  createdCompanyContacts CompanyContact[] @relation("CompanyContactCreator")
+
+  // v2 relations
+  managedProjects    Project[]           @relation("ProjectManager")
+  createdQuotations  Quotation[]         @relation("QuotationCreator")
+  authoredQuotations Quotation[]         @relation("QuotationAuthor")
+  revisionAuthors    QuotationRevision[] @relation("RevisionAuthor")
+  notifications      Notification[]
+  projectMemos       ProjectMemo[]
+
+  @@index([email])
+  @@index([employeeNo])
+  @@index([departmentId])
+  @@index([ourCompanyId])
+  @@index([role])
+  @@index([isActive])
+  @@map("employees")
+}
+
+// ─── NumberSequence (자동 채번) ──────────────────────────────────────────────
+
+model NumberSequence {
+  id           String @id @default(cuid())
+  ourCompanyId String
+  docType      String // QUOTATION | PURCHASE_ORDER | TRANSACTION_STATEMENT | INVOICE
+  year         Int
+  lastNumber   Int    @default(0)
+
+  ourCompany OurCompany @relation(fields: [ourCompanyId], references: [id])
+
+  @@unique([ourCompanyId, docType, year])
+  @@map("number_sequences")
+}
+
+// ─── Company (거래처) ───────────────────────────────────────────────────────
+
+model Company {
+  id             String   @id @default(cuid())
+  name           String   @unique
+  code           String?
+  bizNumber      String?
+  representative String?
+  address        String?
+  phone          String?
+  taxEmail       String?
+  memo           String?
+  createdById    String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  createdBy  Employee?      @relation("CompanyCreator", fields: [createdById], references: [id])
+  contacts   CompanyContact[]
+
+  // v2 relations
+  clientProjects         Project[]              @relation("ProjectClient")
+  supplierProjects       Project[]              @relation("ProjectSupplier")
+  quotationsReceived     Quotation[]            @relation("QuotationCounterpart")
+  purchaseOrdersReceived PurchaseOrder[]        @relation("POSupplier")
+  invoices               Invoice[]              @relation("InvoiceCounterpart")
+  statements             TransactionStatement[] @relation("StatementCounterpart")
+  singleTransactions     SingleTransaction[]    @relation("SingleTxCounterpart")
+  receivedMails          ReceivedMail[]         @relation("MailSender")
+
+  @@index([name])
+  @@index([bizNumber])
+  @@index([createdById])
+  @@map("companies")
+}
+
+model CompanyContact {
+  id          String   @id @default(cuid())
+  companyId   String
+  name        String
+  position    String?
+  phone       String?
+  email       String?
+  memo        String?
+  createdById String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  company   Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  createdBy Employee? @relation("CompanyContactCreator", fields: [createdById], references: [id])
+
+  @@index([companyId])
+  @@index([createdById])
+  @@map("company_contacts")
+}
+
+// ─── Project ────────────────────────────────────────────────────────────────
+
+model Project {
+  id            String        @id @default(cuid())
+  ourCompanyId  String
+  name          String
+
+  clientId      String?
+  supplierId    String?
+  managerId     String?
+
+  startDate     DateTime?
+  endDate       DateTime?
+
+  status        ProjectStatus @default(ACTIVE)
+  stage         ProjectStage  @default(SETUP)
+
+  confirmedSalesAmount    Int @default(0)
+  confirmedSalesTax       Int @default(0)
+  confirmedPurchaseAmount Int @default(0)
+  confirmedPurchaseTax    Int @default(0)
+
+  memo          String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  ourCompany OurCompany @relation(fields: [ourCompanyId], references: [id])
+  client     Company?   @relation("ProjectClient", fields: [clientId], references: [id])
+  supplier   Company?   @relation("ProjectSupplier", fields: [supplierId], references: [id])
+  manager    Employee?  @relation("ProjectManager", fields: [managerId], references: [id])
+
+  quotations            Quotation[]
+  purchaseOrders        PurchaseOrder[]
+  attachments           ProjectAttachment[]
+  invoices              Invoice[]
+  transactionStatements TransactionStatement[]
+  memos                 ProjectMemo[]
+
+  @@index([ourCompanyId])
+  @@index([clientId])
+  @@index([supplierId])
+  @@index([managerId])
+  @@index([status])
+  @@index([stage])
+  @@index([ourCompanyId, status])
+  @@map("projects")
+}
+
+// ─── Quotation (견적서) ─────────────────────────────────────────────────────
+
+model Quotation {
+  id              String          @id @default(cuid())
+  ourCompanyId    String
+  projectId       String?
+  quotationNo     String          @unique
+  direction       Direction
+  title           String?
+  quotationDate   DateTime?
+  validUntil      DateTime?
+  paymentTerms    String?
+
+  // Counterpart
+  counterpartId   String?
+  contactName     String?
+  contactPhone    String?
+  contactEmail    String?
+
+  // Author (our side)
+  authorId        String?
+  authorName      String?
+  authorPosition  String?
+  authorPhone     String?
+  authorEmail     String?
+
+  // Amounts
+  supplyAmount    Int             @default(0)
+  taxAmount       Int             @default(0)
+  totalAmount     Int             @default(0)
+  defaultTaxRate  Float           @default(10)
+
+  // Revision
+  revision        Int             @default(0)
+
+  // Status
+  status          QuotationStatus @default(DRAFT)
+  isConfirmed     Boolean         @default(false)
+  confirmedAt     DateTime?
+
+  // Source tracking (purchase → sales)
+  sourceQuotationId String?
+  marginRate        Float?
+
+  // Mail
+  lastSentAt      DateTime?
+  sentCount       Int             @default(0)
+
+  // Purchase original file
+  originalFilePath String?
+
+  // IMAP link
+  receivedMailId  String?  @unique
+
+  // Creator
+  createdById     String?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  ourCompany        OurCompany    @relation(fields: [ourCompanyId], references: [id])
+  project           Project?      @relation(fields: [projectId], references: [id])
+  counterpart       Company?      @relation("QuotationCounterpart", fields: [counterpartId], references: [id])
+  author            Employee?     @relation("QuotationAuthor", fields: [authorId], references: [id])
+  sourceQuotation   Quotation?    @relation("QuotationSource", fields: [sourceQuotationId], references: [id])
+  derivedQuotations Quotation[]   @relation("QuotationSource")
+  createdBy         Employee?     @relation("QuotationCreator", fields: [createdById], references: [id])
+  receivedMail      ReceivedMail? @relation(fields: [receivedMailId], references: [id])
+
+  items         QuotationItem[]
+  revisions     QuotationRevision[]
+  purchaseOrder PurchaseOrder?      @relation("POFromQuotation")
+  invoices      Invoice[]           @relation("InvoiceQuotation")
+
+  @@index([ourCompanyId])
+  @@index([projectId])
+  @@index([direction])
+  @@index([status])
+  @@index([isConfirmed])
+  @@index([counterpartId])
+  @@index([quotationDate])
+  @@index([sourceQuotationId])
+  @@index([ourCompanyId, direction, status])
+  @@index([projectId, direction, isConfirmed])
+  @@map("quotations")
+}
+
+model QuotationItem {
+  id           String   @id @default(cuid())
+  quotationId  String
+  sortOrder    Int      @default(0)
+  name         String
+  spec         String?
+  unit         String?
+  quantity     Int      @default(1)
+  unitPrice    Int      @default(0)
+  amount       Int      @default(0)
+  taxRate      Float    @default(10)
+  remark       String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  quotation Quotation @relation(fields: [quotationId], references: [id], onDelete: Cascade)
+
+  @@index([quotationId])
+  @@map("quotation_items")
+}
+
+model QuotationRevision {
+  id           String   @id @default(cuid())
+  quotationId  String
+  revision     Int
+  snapshot     String
+  changeNote   String?
+  changedById  String?
+  createdAt    DateTime @default(now())
+
+  quotation Quotation @relation(fields: [quotationId], references: [id], onDelete: Cascade)
+  changedBy Employee? @relation("RevisionAuthor", fields: [changedById], references: [id])
+
+  @@unique([quotationId, revision])
+  @@index([quotationId])
+  @@map("quotation_revisions")
+}
+
+// ─── PurchaseOrder (발주서) ──────────────────────────────────────────────────
+
+model PurchaseOrder {
+  id                String    @id @default(cuid())
+  ourCompanyId      String
+  projectId         String?
+  poNo              String    @unique
+  sourceQuotationId String?   @unique
+  supplierId        String?
+  contactName       String?
+  contactEmail      String?
+  deliveryDate      DateTime?
+  deliveryPlace     String?
+  supplyAmount      Int       @default(0)
+  taxAmount         Int       @default(0)
+  totalAmount       Int       @default(0)
+  status            POStatus  @default(DRAFT)
+  sentAt            DateTime?
+  memo              String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  ourCompany      OurCompany @relation(fields: [ourCompanyId], references: [id])
+  project         Project?   @relation(fields: [projectId], references: [id])
+  sourceQuotation Quotation? @relation("POFromQuotation", fields: [sourceQuotationId], references: [id])
+  supplier        Company?   @relation("POSupplier", fields: [supplierId], references: [id])
+
+  items PurchaseOrderItem[]
+
+  @@index([ourCompanyId])
+  @@index([projectId])
+  @@index([supplierId])
+  @@index([status])
+  @@map("purchase_orders")
+}
+
+model PurchaseOrderItem {
+  id              String @id @default(cuid())
+  purchaseOrderId String
+  sortOrder       Int    @default(0)
+  name            String
+  spec            String?
+  unit            String?
+  quantity        Int    @default(1)
+  unitPrice       Int    @default(0)
+  amount          Int    @default(0)
+  taxRate         Float  @default(10)
+  remark          String?
+
+  purchaseOrder PurchaseOrder @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
+
+  @@index([purchaseOrderId])
+  @@map("purchase_order_items")
+}
+
+// ─── Invoice (계산서) ───────────────────────────────────────────────────────
+
+model Invoice {
+  id              String        @id @default(cuid())
+  ourCompanyId    String
+  projectId       String?
+  invoiceNo       String?
+  direction       Direction
+  quotationId     String?
+  counterpartId   String?
+  supplyAmount    Int           @default(0)
+  taxAmount       Int           @default(0)
+  totalAmount     Int           @default(0)
+  status          InvoiceStatus @default(NOT_ISSUED)
+  requestedAt     DateTime?
+  issuedAt        DateTime?
+  paidAt          DateTime?
+  dueDate         DateTime?
+  calendarEventId String?
+  requestedById   String?
+  processedById   String?
+  memo            String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  ourCompany  OurCompany @relation(fields: [ourCompanyId], references: [id])
+  project     Project?   @relation(fields: [projectId], references: [id])
+  quotation   Quotation? @relation("InvoiceQuotation", fields: [quotationId], references: [id])
+  counterpart Company?   @relation("InvoiceCounterpart", fields: [counterpartId], references: [id])
+
+  creditNotes CreditNote[]
+
+  @@index([ourCompanyId])
+  @@index([projectId])
+  @@index([direction])
+  @@index([status])
+  @@index([dueDate])
+  @@index([counterpartId])
+  @@index([dueDate, status])
+  @@map("invoices")
+}
+
+model CreditNote {
+  id            String           @id @default(cuid())
+  invoiceId     String
+  creditNoteNo  String?
+  reason        CreditNoteReason
+  reasonDetail  String?
+  supplyAmount  Int              @default(0)
+  taxAmount     Int              @default(0)
+  totalAmount   Int              @default(0)
+  status        CreditNoteStatus @default(NOT_ISSUED)
+  issuedAt      DateTime?
+  memo          String?
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+
+  invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  @@index([invoiceId])
+  @@map("credit_notes")
+}
+
+// ─── TransactionStatement (거래명세서) ───────────────────────────────────────
+
+model TransactionStatement {
+  id             String    @id @default(cuid())
+  ourCompanyId   String
+  projectId      String?
+  statementNo    String    @unique
+  counterpartId  String?
+  contactName    String?
+  supplyAmount   Int       @default(0)
+  taxAmount      Int       @default(0)
+  totalAmount    Int       @default(0)
+  issueDate      DateTime?
+  lastSentAt     DateTime?
+  memo           String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  ourCompany  OurCompany @relation(fields: [ourCompanyId], references: [id])
+  project     Project?   @relation(fields: [projectId], references: [id])
+  counterpart Company?   @relation("StatementCounterpart", fields: [counterpartId], references: [id])
+
+  items TransactionStatementItem[]
+
+  @@index([ourCompanyId])
+  @@index([projectId])
+  @@index([counterpartId])
+  @@map("transaction_statements")
+}
+
+model TransactionStatementItem {
+  id          String @id @default(cuid())
+  statementId String
+  sortOrder   Int    @default(0)
+  name        String
+  spec        String?
+  unit        String?
+  quantity    Int    @default(1)
+  unitPrice   Int    @default(0)
+  amount      Int    @default(0)
+  remark      String?
+
+  statement TransactionStatement @relation(fields: [statementId], references: [id], onDelete: Cascade)
+
+  @@index([statementId])
+  @@map("transaction_statement_items")
+}
+
+// ─── SingleTransaction (단건 거래) ──────────────────────────────────────────
+
+model SingleTransaction {
+  id             String    @id @default(cuid())
+  ourCompanyId   String
+  direction      Direction
+  counterpartId  String?
+  itemDesc       String
+  supplyAmount   Int
+  taxRate        Float     @default(10)
+  taxAmount      Int
+  totalAmount    Int
+  tradeDate      DateTime
+  memo           String?
+  attachmentPath String?
+  createdById    String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  ourCompany  OurCompany @relation(fields: [ourCompanyId], references: [id])
+  counterpart Company?   @relation("SingleTxCounterpart", fields: [counterpartId], references: [id])
+
+  @@index([ourCompanyId])
+  @@index([direction])
+  @@index([tradeDate])
+  @@index([counterpartId])
+  @@index([ourCompanyId, direction, tradeDate])
+  @@map("single_transactions")
+}
+
+// ─── ProjectAttachment ──────────────────────────────────────────────────────
+
+model ProjectAttachment {
+  id           String   @id @default(cuid())
+  projectId    String
+  fileName     String
+  filePath     String
+  fileSize     Int
+  mimeType     String?
+  docType      DocType  @default(OTHER)
+  docTypeLabel String?
+  uploadedById String?
+  createdAt    DateTime @default(now())
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@index([docType])
+  @@map("project_attachments")
+}
+
+// ─── ProjectMemo ────────────────────────────────────────────────────────────
+
+model ProjectMemo {
+  id        String   @id @default(cuid())
+  projectId String
+  authorId  String?
+  type      MemoType @default(MEMO)
+  content   String
+  createdAt DateTime @default(now())
+
+  project Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  author  Employee? @relation(fields: [authorId], references: [id])
+
+  @@index([projectId])
+  @@index([createdAt])
+  @@map("project_memos")
+}
+
+// ─── ReceivedMail (IMAP) ────────────────────────────────────────────────────
+
+model ReceivedMail {
+  id               String     @id @default(cuid())
+  ourCompanyId     String
+  messageId        String     @unique
+  fromAddress      String
+  fromName         String?
+  subject          String
+  receivedAt       DateTime
+  attachments      String?
+  status           MailStatus @default(PENDING)
+  matchedCompanyId String?
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+
+  ourCompany     OurCompany @relation(fields: [ourCompanyId], references: [id])
+  matchedCompany Company?   @relation("MailSender", fields: [matchedCompanyId], references: [id])
+  quotation      Quotation?
+
+  @@index([ourCompanyId])
+  @@index([status])
+  @@index([fromAddress])
+  @@index([receivedAt])
+  @@map("received_mails")
+}
+
+// ─── Notification ───────────────────────────────────────────────────────────
+
+model Notification {
+  id          String    @id @default(cuid())
+  recipientId String
+  type        String
+  title       String
+  message     String?
+  linkType    String?
+  linkId      String?
+  isRead      Boolean   @default(false)
+  readAt      DateTime?
+  createdAt   DateTime  @default(now())
+
+  recipient Employee @relation(fields: [recipientId], references: [id])
+
+  @@index([recipientId])
+  @@index([isRead])
+  @@index([createdAt])
+  @@map("notifications")
+}
+
+// ─── v1 Migrated Models (unchanged or minimal changes) ──────────────────────
+
+model LeaveBalance {
+  id            String   @id @default(cuid())
+  employeeId    String   @unique
+  year          Int
+  totalDays     Float    @default(15.0)
+  usedDays      Float    @default(0.0)
+  remainingDays Float    @default(15.0)
+  updatedAt     DateTime @updatedAt
+
+  employee Employee @relation(fields: [employeeId], references: [id])
+
+  @@index([employeeId])
+  @@index([year])
+  @@map("leave_balances")
+}
+
+model Leave {
+  id         String      @id @default(cuid())
+  employeeId String
+  leaveType  LeaveType
+  startDate  DateTime
+  endDate    DateTime
+  totalDays  Float
+  reason     String?
+  status     LeaveStatus @default(PENDING)
+  reviewerId String?
+  reviewNote String?
+  reviewedAt DateTime?
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+
+  employee Employee  @relation("EmployeeLeaves", fields: [employeeId], references: [id])
+  reviewer Employee? @relation("ReviewerLeaves", fields: [reviewerId], references: [id])
+
+  @@index([employeeId])
+  @@index([status])
+  @@index([startDate])
+  @@index([endDate])
+  @@index([reviewerId])
+  @@map("leaves")
+}
+
+model ApprovalDocument {
+  id          String         @id @default(cuid())
+  title       String
+  content     String
+  category    String?
+  authorId    String
+  status      ApprovalStatus @default(DRAFT)
+  currentStep Int            @default(0)
+  totalSteps  Int            @default(0)
+  submittedAt DateTime?
+  completedAt DateTime?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  author Employee       @relation(fields: [authorId], references: [id])
+  steps  ApprovalStep[]
+
+  @@index([authorId])
+  @@index([status])
+  @@index([currentStep])
+  @@index([submittedAt])
+  @@map("approval_documents")
+}
+
+model ApprovalStep {
+  id                 String     @id @default(cuid())
+  approvalDocumentId String
+  stepOrder          Int
+  approverId         String
+  status             StepStatus @default(PENDING)
+  comment            String?
+  actionAt           DateTime?
+  createdAt          DateTime   @default(now())
+
+  approvalDocument ApprovalDocument @relation(fields: [approvalDocumentId], references: [id], onDelete: Cascade)
+  approver         Employee         @relation(fields: [approverId], references: [id])
+
+  @@unique([approvalDocumentId, stepOrder])
+  @@index([approvalDocumentId])
+  @@index([approverId])
+  @@index([status])
+  @@index([stepOrder])
+  @@map("approval_steps")
+}
+
+model CalendarEvent {
+  id           String    @id @default(cuid())
+  title        String
+  description  String?
+  startTime    DateTime
+  endTime      DateTime
+  allDay       Boolean   @default(false)
+  eventType    EventType @default(PERSONAL)
+  ownerId      String
+  departmentId String?
+  isPublic     Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  owner      Employee    @relation(fields: [ownerId], references: [id])
+  department Department? @relation(fields: [departmentId], references: [id])
+
+  @@index([ownerId])
+  @@index([departmentId])
+  @@index([startTime])
+  @@index([endTime])
+  @@index([eventType])
+  @@map("calendar_events")
+}
+
+// ─── Meeting ────────────────────────────────────────────────────────────────
+
+model Meeting {
+  id           String      @id @default(cuid())
+  title        String
+  meetingType  MeetingType
+  meetingDate  DateTime
+  location     String?
+  meetingTime  String?
+  memo         String?
+  announcement String?
+  createdById  String?
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  createdBy      Employee?         @relation("MeetingCreator", fields: [createdById], references: [id])
+  workItems      MeetingWorkItem[]
+  planItems      MeetingPlanItem[]
+  issues         MeetingIssue[]
+  decisions      MeetingDecision[]
+  monthlyReports MonthlyReport[]
+
+  @@index([meetingType])
+  @@index([meetingDate])
+  @@index([createdById])
+  @@map("meetings")
+}
+
+model MeetingWorkItem {
+  id        String   @id @default(cuid())
+  meetingId String
+  authorId  String
+  category  String?
+  client    String?
+  content   String
+  progress  Float    @default(0)
+  status    String   @default("진행중")
+  assignee  String?
+  remarks   String?
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  meeting Meeting  @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  author  Employee @relation("WorkItemAuthor", fields: [authorId], references: [id])
+
+  @@index([meetingId])
+  @@index([authorId])
+  @@map("meeting_work_items")
+}
+
+model MeetingPlanItem {
+  id              String    @id @default(cuid())
+  meetingId       String
+  authorId        String
+  category        String?
+  client          String?
+  content         String
+  targetDate      DateTime?
+  priority        String    @default("보통")
+  assignee        String?
+  remarks         String?
+  calendarEventId String?
+  sortOrder       Int       @default(0)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  meeting Meeting  @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  author  Employee @relation("PlanItemAuthor", fields: [authorId], references: [id])
+
+  @@index([meetingId])
+  @@index([authorId])
+  @@map("meeting_plan_items")
+}
+
+model MeetingIssue {
+  id           String   @id @default(cuid())
+  meetingId    String
+  authorId     String
+  category     String?
+  client       String?
+  content      String
+  urgency      String   @default("보통")
+  actionStatus String   @default("확인중")
+  assignee     String?
+  remarks      String?
+  sortOrder    Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  meeting Meeting  @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  author  Employee @relation("IssueAuthor", fields: [authorId], references: [id])
+
+  @@index([meetingId])
+  @@index([authorId])
+  @@map("meeting_issues")
+}
+
+model MeetingDecision {
+  id        String   @id @default(cuid())
+  meetingId String
+  authorId  String
+  category  String?
+  content   String
+  deadline  String?
+  assignee  String?
+  remarks   String?
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  meeting Meeting  @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  author  Employee @relation("DecisionAuthor", fields: [authorId], references: [id])
+
+  @@index([meetingId])
+  @@index([authorId])
+  @@map("meeting_decisions")
+}
+
+model MonthlyReport {
+  id           String   @id @default(cuid())
+  meetingId    String
+  authorId     String
+  prevMonth    String   @default("")
+  currentMonth String   @default("")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  meeting Meeting  @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  author  Employee @relation("MonthlyReportAuthor", fields: [authorId], references: [id])
+
+  @@unique([meetingId, authorId])
+  @@index([meetingId])
+  @@index([authorId])
+  @@map("monthly_reports")
+}
+
+// ─── Expense (법인카드) ─────────────────────────────────────────────────────
+
+model ExpenseRecord {
+  id           String   @id @default(cuid())
+  company      String
+  title        String
+  year         Int      @default(0)
+  month        Int      @default(0)
+  uploadedById String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  uploadedBy Employee      @relation("ExpenseUploader", fields: [uploadedById], references: [id])
+  items      ExpenseItem[]
+
+  @@index([company])
+  @@index([uploadedById])
+  @@index([year, month])
+  @@map("expense_records")
+}
+
+model ExpenseItem {
+  id             String @id @default(cuid())
+  recordId       String
+  useDate        String
+  month          Int
+  day            Int
+  corpOrPersonal String @default("법인")
+  cardOrCash     String @default("카드")
+  category       String @default("")
+  corpCardAmount Int    @default(0)
+  corpCashAmount Int    @default(0)
+  persCardAmount Int    @default(0)
+  persCashAmount Int    @default(0)
+  merchantName   String @default("")
+  description    String @default("")
+  note           String @default("")
+  personInCharge String @default("")
+  cancelStatus   String @default("정상")
+  approvalNo     String @default("")
+  vatAmount      Int    @default(0)
+  sortOrder      Int    @default(0)
+
+  record ExpenseRecord @relation(fields: [recordId], references: [id], onDelete: Cascade)
+
+  @@index([recordId])
+  @@map("expense_items")
+}
+
+// ─── Suggestion (건의게시판) ────────────────────────────────────────────────
+
+model Suggestion {
+  id          String   @id @default(cuid())
+  authorId    String
+  category    String   @default("기타")
+  title       String
+  content     String
+  isAnonymous Boolean  @default(false)
+  status      String   @default("OPEN")
+  adminNote   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  author Employee @relation("SuggestionAuthor", fields: [authorId], references: [id])
+
+  @@index([authorId])
+  @@index([status])
+  @@index([createdAt])
+  @@map("suggestions")
+}
+
+// ─── IT Asset ───────────────────────────────────────────────────────────────
+
+model ITAsset {
+  id          String   @id @default(cuid())
+  name        String
+  category    String
+  ip          String?
+  os          String?
+  specs       String?
+  location    String?
+  purpose     String?
+  status      String   @default("운영중")
+  memo        String?
+  createdById String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  createdBy Employee?      @relation("AssetCreator", fields: [createdById], references: [id])
+  accounts  AssetAccount[]
+
+  @@index([category])
+  @@index([status])
+  @@map("it_assets")
+}
+
+model AssetAccount {
+  id                String   @id @default(cuid())
+  assetId           String
+  service           String
+  username          String
+  encryptedPassword String?
+  port              Int?
+  url               String?
+  memo              String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  asset ITAsset @relation(fields: [assetId], references: [id], onDelete: Cascade)
+
+  @@index([assetId])
+  @@map("asset_accounts")
+}
+
+// ─── IP Table ───────────────────────────────────────────────────────────────
+
+model IPEntry {
+  id         String   @id @default(cuid())
+  ip         String
+  subnet     String?
+  gateway    String?
+  type       String   @default("유선")
+  hostname   String?
+  location   String?
+  assignedTo String?
+  status     String   @default("사용중")
+  memo       String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([ip])
+  @@index([type])
+  @@index([status])
+  @@map("ip_entries")
+}
+
+// ─── Auth ───────────────────────────────────────────────────────────────────
+
+model RefreshToken {
+  id         String    @id @default(cuid())
+  token      String    @unique
+  employeeId String
+  expiresAt  DateTime
+  createdAt  DateTime  @default(now())
+  revokedAt  DateTime?
+
+  employee Employee @relation(fields: [employeeId], references: [id])
+
+  @@index([token])
+  @@index([employeeId])
+  @@index([expiresAt])
+  @@map("refresh_tokens")
+}
+
+model PasswordHistory {
+  id           String   @id @default(cuid())
+  employeeId   String
+  passwordHash String
+  createdAt    DateTime @default(now())
+
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@index([employeeId])
+  @@map("password_history")
+}
+
+model SignatureProfile {
+  id              String   @id @default(cuid())
+  employeeId      String   @unique
+  signatureImg    String?
+  stampConfig     String?
+  stampImg        String?
+  nameplateConfig String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@index([employeeId])
+  @@map("signature_profiles")
+}
+
+// ─── Audit Log ──────────────────────────────────────────────────────────────
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  action     String
+  actorId    String?
+  targetId   String?
+  targetType String?
+  detail     String?
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
+
+  @@index([action])
+  @@index([actorId])
+  @@index([targetId])
+  @@index([createdAt])
+  @@map("audit_logs")
 }
