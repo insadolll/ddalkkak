@@ -4,6 +4,10 @@ import ProtectedRoute from '@/components/ProtectedRoute';
 import Layout from '@/components/Layout';
 import LoginPage from '@/features/auth/LoginPage';
 import DashboardPage from '@/features/dashboard/DashboardPage';
+import ProjectListPage from '@/features/project/ProjectListPage';
+import ProjectDetailPage from '@/features/project/ProjectDetailPage';
+import QuotationListPage from '@/features/quotation/QuotationListPage';
+import QuotationDetailPage from '@/features/quotation/QuotationDetailPage';
 
 function PlaceholderPage({ title }: { title: string }) {
   return (
@@ -30,13 +34,15 @@ export default function App() {
             }
           >
             <Route path="/" element={<DashboardPage />} />
+            <Route path="/projects" element={<ProjectListPage />} />
             <Route
-              path="/projects"
-              element={<PlaceholderPage title="프로젝트 관리" />}
+              path="/projects/:id"
+              element={<ProjectDetailPage />}
             />
+            <Route path="/quotations" element={<QuotationListPage />} />
             <Route
-              path="/quotations"
-              element={<PlaceholderPage title="견적서" />}
+              path="/quotations/:id"
+              element={<QuotationDetailPage />}
             />
             <Route
               path="/accounting"
