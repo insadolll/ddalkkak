@@ -16,6 +16,7 @@ import {
   ChevronLeft,
   ChevronDown,
   Check,
+  Settings,
 } from 'lucide-react';
 
 interface OurCompany {
@@ -45,6 +46,7 @@ const pageTitles: Record<string, string> = {
   '/meetings': '업무회의',
   '/suggestions': '건의게시판',
   '/database': '사내DB',
+  '/settings/employees': '직원 관리',
 };
 
 export default function Layout() {
@@ -235,6 +237,33 @@ export default function Layout() {
               )}
             </NavLink>
           ))}
+
+          {/* Settings (ADMIN only) */}
+          {isAdmin && (
+            <>
+              <div className="h-px bg-slate-200/50 my-2 mx-2" />
+              <NavLink
+                to="/settings/employees"
+                className={({ isActive }) =>
+                  `flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group ${
+                    isActive
+                      ? 'bg-primary/10 text-primary font-medium'
+                      : 'text-slate-500 hover:bg-slate-100/60 hover:text-slate-700'
+                  }`
+                }
+              >
+                {({ isActive }) => (
+                  <>
+                    <Settings
+                      className={`w-5 h-5 flex-shrink-0 ${isActive ? 'text-primary' : 'text-slate-400 group-hover:text-slate-500'}`}
+                      strokeWidth={1.75}
+                    />
+                    {!collapsed && <span className="text-sm">설정</span>}
+                  </>
+                )}
+              </NavLink>
+            </>
+          )}
         </nav>
 
         {/* User info + Logout */}

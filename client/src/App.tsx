@@ -9,6 +9,7 @@ import ProjectDetailPage from '@/features/project/ProjectDetailPage';
 import QuotationListPage from '@/features/quotation/QuotationListPage';
 import QuotationDetailPage from '@/features/quotation/QuotationDetailPage';
 import AccountingPage from '@/features/accounting/AccountingPage';
+import EmployeeListPage from '@/features/settings/EmployeeListPage';
 
 function PlaceholderPage({ title }: { title: string }) {
   return (
@@ -68,6 +69,10 @@ export default function App() {
             <Route
               path="/database"
               element={<PlaceholderPage title="사내DB" />}
+            />
+            <Route
+              path="/settings/employees"
+              element={<EmployeeListPage />}
             />
           </Route>
         </Routes>

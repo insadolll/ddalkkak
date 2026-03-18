@@ -10,6 +10,7 @@ import {
   ChevronDown,
   ChevronUp,
   ExternalLink,
+  Download,
 } from 'lucide-react';
 import api from '@/services/api';
 
@@ -320,6 +321,25 @@ export default function QuotationDetailPage() {
                 매출 견적서 생성
               </button>
             )}
+            <button
+              onClick={async () => {
+                try {
+                  const res = await api.get(`/quotations/${id}/excel`, { responseType: 'blob' });
+                  const url = window.URL.createObjectURL(new Blob([res.data]));
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.setAttribute('download', `견적서_${data.quotationNo}.xlsx`);
+                  document.body.appendChild(a);
+                  a.click();
+                  a.remove();
+                  window.URL.revokeObjectURL(url);
+                } catch { alert('다운로드에 실패했습니다.'); }
+              }}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 text-sm font-medium rounded-xl bg-white/60 text-slate-600 border border-slate-200 hover:bg-slate-50 transition"
+            >
+              <Download className="w-4 h-4" strokeWidth={1.75} />
+              엑셀 다운로드
+            </button>
           </div>
         </div>
 
