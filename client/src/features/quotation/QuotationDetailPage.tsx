@@ -12,8 +12,10 @@ import {
   ExternalLink,
   Download,
   Trash2,
+  Mail,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import SendMailModal from './SendMailModal';
 import api from '@/services/api';
 
 /* ------------------------------------------------------------------ */
@@ -114,6 +116,7 @@ export default function QuotationDetailPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
 
+  const [showMailModal, setShowMailModal] = useState(false);
   const [data, setData] = useState<QuotationDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -357,6 +360,13 @@ export default function QuotationDetailPage() {
               <Download className="w-4 h-4" strokeWidth={1.75} />
               엑셀 다운로드
             </button>
+            <button
+              onClick={() => setShowMailModal(true)}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 text-sm font-medium rounded-xl bg-blue-50 text-blue-600 hover:bg-blue-100 transition"
+            >
+              <Mail className="w-4 h-4" strokeWidth={1.75} />
+              메일 발송
+            </button>
             {user?.role === 'ADMIN' && (
               <button
                 onClick={handleDelete}
@@ -535,6 +545,15 @@ export default function QuotationDetailPage() {
             </div>
           )}
         </div>
+      )}
+      {showMailModal && data && (
+        <SendMailModal
+          quotationId={data.id as unknown as string}
+          quotationNo={data.quotationNo}
+          contactEmail={data.contactEmail}
+          onClose={() => setShowMailModal(false)}
+          onSent={() => { setShowMailModal(false); alert('메일이 발송되었습니다.'); fetchData(); }}
+        />
       )}
     </div>
   );

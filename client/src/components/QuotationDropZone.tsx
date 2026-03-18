@@ -28,21 +28,16 @@ interface Props {
 }
 
 function DraggableCard({ q }: { q: MiniQuotation }) {
-  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: q.id,
     data: q,
   });
 
-  const style = transform
-    ? { transform: `translate(${transform.x}px, ${transform.y}px)` }
-    : undefined;
-
   return (
     <div
       ref={setNodeRef}
-      style={style}
-      className={`p-3 bg-white/80 rounded-xl border border-slate-200 transition-all cursor-grab active:cursor-grabbing ${
-        isDragging ? 'opacity-30 scale-[0.98]' : 'hover:shadow-md hover:translate-y-[-1px]'
+      className={`p-3 bg-white/80 rounded-xl border border-slate-200 cursor-grab active:cursor-grabbing ${
+        isDragging ? 'opacity-30 border-2 border-dashed border-primary/30 bg-primary/5' : 'hover:shadow-md hover:translate-y-[-1px] transition-all'
       }`}
       {...attributes}
       {...listeners}

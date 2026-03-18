@@ -40,8 +40,8 @@ export default function ProjectFormModal({ project, onClose, onSaved }: Props) {
   const [supplierId, setSupplierId] = useState<string>(
     project?.supplier?.id ?? '',
   );
-  const [managerName, setManagerName] = useState(
-    project?.manager?.name || '',
+  const [managerId, setManagerId] = useState<string>(
+    project?.manager?.id ?? '',
   );
   const [startDate, setStartDate] = useState(
     project?.startDate?.slice(0, 10) || '',
@@ -52,10 +52,14 @@ export default function ProjectFormModal({ project, onClose, onSaved }: Props) {
   const [memo, setMemo] = useState(project?.memo || '');
 
   const [companies, setCompanies] = useState<Company[]>([]);
+  const [employees, setEmployees] = useState<{ id: string; name: string; position: string | null }[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
+    api.get('/employees', { params: { limit: 200 } })
+      .then(r => setEmployees(r.data.data))
+      .catch(() => {});
     api
       .get<{ data: Company[]; pagination: unknown }>('/companies', {
         params: { limit: 200 },
@@ -90,6 +94,7 @@ export default function ProjectFormModal({ project, onClose, onSaved }: Props) {
         name: name.trim(),
         clientId: clientId || undefined,
         supplierId: supplierId || undefined,
+        managerId: managerId || undefined,
         startDate: startDate || undefined,
         endDate: endDate || undefined,
         memo: memo.trim() || undefined,
@@ -190,16 +195,20 @@ export default function ProjectFormModal({ project, onClose, onSaved }: Props) {
             </FieldWrapper>
           </div>
 
-          {/* Manager (placeholder text input) */}
+          {/* Manager */}
           <FieldWrapper label="담당자">
-            <input
-              type="text"
-              value={managerName}
-              onChange={(e) => setManagerName(e.target.value)}
-              placeholder="담당자명 (추후 선택으로 변경 예정)"
-              className="w-full px-4 py-2.5 bg-white/80 border border-slate-200 rounded-xl text-sm text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#078080]/30 focus:border-[#078080]/40 transition-all"
-              disabled
-            />
+            <select
+              value={managerId}
+              onChange={(e) => setManagerId(e.target.value)}
+              className="w-full px-4 py-2.5 bg-white/80 border border-slate-200 rounded-xl text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#078080]/30 focus:border-[#078080]/40 transition-all appearance-none"
+            >
+              <option value="">선택하세요</option>
+              {employees.map((e) => (
+                <option key={e.id} value={e.id}>
+                  {e.name}{e.position ? ` (${e.position})` : ''}
+                </option>
+              ))}
+            </select>
           </FieldWrapper>
 
           {/* Dates */}
