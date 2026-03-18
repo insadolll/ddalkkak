@@ -80,6 +80,7 @@ export async function getSummary(req: Request, res: Response) {
     const recentProjects = await prisma.project.findMany({
       where: { ...companyFilter, status: 'ACTIVE' },
       include: {
+        ourCompany: { select: { id: true, code: true, name: true } },
         client: { select: { id: true, name: true } },
         manager: { select: { id: true, name: true } },
       },

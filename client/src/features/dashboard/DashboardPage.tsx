@@ -234,7 +234,7 @@ export default function DashboardPage() {
                     </span>
                   </div>
                   <p className="text-xs text-slate-400 mb-1">
-                    {project.ourCompany.name}
+                    {project.ourCompany?.name || ''}
                   </p>
                   {project.client && (
                     <p className="text-xs text-slate-500">
