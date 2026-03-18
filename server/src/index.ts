@@ -8,6 +8,11 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
+import authRoutes from './modules/auth/auth.routes';
+import ourCompanyRoutes from './modules/our-company/our-company.routes';
+import companyRoutes from './modules/company/company.routes';
+import projectRoutes from './modules/project/project.routes';
+
 const app = express();
 const PORT = parseInt(process.env.PORT || '3001', 10);
 const HOST = process.env.HOST || '0.0.0.0';
@@ -28,10 +33,16 @@ const limiter = rateLimit({
 });
 app.use('/api', limiter);
 
-// API routes placeholder
+// Health check
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', version: '2.0.0' });
 });
+
+// API routes
+app.use('/api/auth', authRoutes);
+app.use('/api/our-companies', ourCompanyRoutes);
+app.use('/api/companies', companyRoutes);
+app.use('/api/projects', projectRoutes);
 
 // Serve static files (client build) in production
 if (process.env.NODE_ENV === 'production') {
