@@ -18,6 +18,11 @@ import singleTransactionRoutes from './modules/single-transaction/single-transac
 import reportRoutes from './modules/report/report.routes';
 import invoiceRoutes from './modules/invoice/invoice.routes';
 import employeeRoutes from './modules/employee/employee.routes';
+import leaveRoutes from './modules/leave/routes';
+import approvalRoutes from './modules/approval/routes';
+import calendarRoutes from './modules/calendar/routes';
+import meetingRoutes from './modules/meeting/routes';
+import suggestionRoutes from './modules/suggestion/routes';
 
 const app = express();
 const PORT = parseInt(process.env.PORT || '3001', 10);
@@ -55,6 +60,11 @@ app.use('/api/single-transactions', singleTransactionRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/invoices', invoiceRoutes);
 app.use('/api/employees', employeeRoutes);
+app.use('/api/leaves', leaveRoutes);
+app.use('/api/approvals', approvalRoutes);
+app.use('/api/calendar', calendarRoutes);
+app.use('/api/meetings', meetingRoutes);
+app.use('/api/suggestions', suggestionRoutes);
 
 // Serve static files (client build) in production
 if (process.env.NODE_ENV === 'production') {
