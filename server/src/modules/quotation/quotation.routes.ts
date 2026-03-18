@@ -8,6 +8,7 @@ import {
   duplicateQuotation, generateSalesFromPurchase,
 } from './quotation.controller';
 import { downloadQuotationExcel } from './quotation-export.controller';
+import { sendQuotationMail } from './quotation-mail.controller';
 
 const router = Router();
 
@@ -28,5 +29,8 @@ router.post('/:id/generate-sales', authenticate, requireRole('ADMIN', 'MANAGER')
 
 // Export
 router.get('/:id/excel', authenticate, downloadQuotationExcel);
+
+// Mail
+router.post('/:id/send-mail', authenticate, sendQuotationMail);
 
 export default router;

@@ -328,6 +328,38 @@ export async function confirmQuotation(req: Request, res: Response) {
           content: `견적서 ${quotation.quotationNo} (${quotation.direction === 'SALES' ? '매출' : '매입'}) 확정. ${note}`,
         },
       });
+
+      // Auto-create Invoice (NOT_ISSUED)
+      await prisma.invoice.create({
+        data: {
+          ourCompanyId: quotation.ourCompanyId,
+          projectId: quotation.projectId,
+          direction: quotation.direction,
+          quotationId: quotation.id,
+          counterpartId: quotation.counterpartId,
+          supplyAmount: quotation.supplyAmount,
+          taxAmount: quotation.taxAmount,
+          totalAmount: quotation.totalAmount,
+        },
+      });
+
+      // Auto-create calendar event for payment due (30 days from confirm)
+      if (quotation.project?.managerId) {
+        const dueDate = new Date();
+        dueDate.setDate(dueDate.getDate() + 30);
+        const dirLabel = quotation.direction === 'SALES' ? '매출' : '매입';
+        await prisma.calendarEvent.create({
+          data: {
+            title: `[${dirLabel} 결제] ${quotation.project.name}`,
+            description: `견적서 ${quotation.quotationNo} 확정 기준 결제 마감일`,
+            startTime: dueDate,
+            endTime: dueDate,
+            allDay: true,
+            eventType: 'COMPANY',
+            ownerId: quotation.project.managerId,
+          },
+        });
+      }
     }
 
     return success(res, { quotation: updated });
