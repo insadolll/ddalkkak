@@ -188,7 +188,7 @@ export default function CompanyListPage() {
       {selected && (
         <div className="fixed inset-0 z-40 flex items-center justify-center" onClick={() => setSelectedId(null)}>
           <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" />
-          <div className="relative bg-white/95 backdrop-blur-2xl border border-white/30 rounded-[20px] shadow-2xl p-6 w-full max-w-2xl max-h-[80vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+          <div className="relative bg-white/95 backdrop-blur-2xl border border-white/30 rounded-[20px] shadow-2xl p-6 w-full max-w-lg min-h-[400px] max-h-[85vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-bold text-slate-800">{selected.name}</h3>
             <div className="flex items-center gap-2">
@@ -199,11 +199,11 @@ export default function CompanyListPage() {
               </button>
             </div>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-            {selected.bizNumber && <div className="flex items-center gap-2 text-slate-600"><FileText className="w-4 h-4 text-slate-400" strokeWidth={1.75} /><div><p className="text-[11px] text-slate-400">사업자번호</p><p className="font-mono">{selected.bizNumber}</p></div></div>}
-            {selected.representative && <div className="flex items-center gap-2 text-slate-600"><User className="w-4 h-4 text-slate-400" strokeWidth={1.75} /><div><p className="text-[11px] text-slate-400">대표자</p><p>{selected.representative}</p></div></div>}
-            {selected.phone && <div className="flex items-center gap-2 text-slate-600"><Phone className="w-4 h-4 text-slate-400" strokeWidth={1.75} /><div><p className="text-[11px] text-slate-400">전화번호</p><p>{selected.phone}</p></div></div>}
-            {selected.taxEmail && <div className="flex items-center gap-2 text-slate-600"><Mail className="w-4 h-4 text-slate-400" strokeWidth={1.75} /><div><p className="text-[11px] text-slate-400">세금계산서 이메일</p><p>{selected.taxEmail}</p></div></div>}
+          <div className="grid grid-cols-2 gap-4 text-sm">
+            {selected.bizNumber && <div className="flex items-center gap-2 text-slate-600"><FileText className="w-4 h-4 text-slate-400 flex-shrink-0" strokeWidth={1.75} /><div><p className="text-[11px] text-slate-400">사업자번호</p><p className="font-mono">{selected.bizNumber}</p></div></div>}
+            {selected.representative && <div className="flex items-center gap-2 text-slate-600"><User className="w-4 h-4 text-slate-400 flex-shrink-0" strokeWidth={1.75} /><div><p className="text-[11px] text-slate-400">대표자</p><p>{selected.representative}</p></div></div>}
+            {selected.phone && <div className="flex items-center gap-2 text-slate-600"><Phone className="w-4 h-4 text-slate-400 flex-shrink-0" strokeWidth={1.75} /><div><p className="text-[11px] text-slate-400">전화번호</p><p>{selected.phone}</p></div></div>}
+            {selected.taxEmail && <div className="flex items-center gap-2 text-slate-600 col-span-2"><Mail className="w-4 h-4 text-slate-400 flex-shrink-0" strokeWidth={1.75} /><div><p className="text-[11px] text-slate-400">세금계산서 이메일</p><p className="whitespace-nowrap">{selected.taxEmail}</p></div></div>}
           </div>
           {selected.address && <div className="flex items-start gap-2 text-slate-500 mt-3 text-sm"><MapPin className="w-4 h-4 text-slate-400 mt-0.5 flex-shrink-0" strokeWidth={1.75} /><span>{selected.address}</span></div>}
           {selected.memo && <p className="text-xs text-slate-400 bg-slate-50 rounded-lg p-2 mt-3">{selected.memo}</p>}
