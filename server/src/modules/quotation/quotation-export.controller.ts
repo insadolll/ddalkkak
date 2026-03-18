@@ -7,6 +7,7 @@ import {
   generateTransactionStatement,
 } from '../../utils/excel-generator';
 import type { QuotationData, PurchaseOrderData } from '../../utils/excel-generator';
+import { generateQuotationPdf } from '../../utils/pdf-generator';
 
 function toQuotationData(q: Record<string, unknown>): QuotationData {
   const items = (q.items as Array<Record<string, unknown>>).map(i => ({
@@ -65,6 +66,53 @@ export async function downloadQuotationExcel(req: Request, res: Response) {
   } catch (e) {
     console.error('downloadQuotationExcel error:', e);
     return error(res, 'INTERNAL', '엑셀 생성에 실패했습니다', 500);
+  }
+}
+
+export async function downloadQuotationPdf(req: Request, res: Response) {
+  try {
+    const quotation = await prisma.quotation.findUnique({
+      where: { id: req.params.id },
+      include: { ourCompany: true, counterpart: { select: { name: true } }, items: { orderBy: { sortOrder: 'asc' } } },
+    });
+    if (!quotation) return error(res, 'NOT_FOUND', '견적서를 찾을 수 없습니다', 404);
+
+    const buffer = await generateQuotationPdf({
+      quotationNo: quotation.quotationNo,
+      revision: quotation.revision,
+      direction: quotation.direction,
+      quotationDate: quotation.quotationDate,
+      validUntil: quotation.validUntil,
+      paymentTerms: quotation.paymentTerms,
+      title: quotation.title,
+      companyCode: quotation.ourCompany.code,
+      companyName: quotation.ourCompany.name,
+      companyBizNumber: quotation.ourCompany.bizNumber,
+      companyRepresentative: quotation.ourCompany.representative,
+      companyAddress: quotation.ourCompany.address,
+      companyPhone: quotation.ourCompany.phone,
+      companyFax: quotation.ourCompany.fax,
+      counterpartName: quotation.counterpart?.name || null,
+      contactName: quotation.contactName,
+      contactPhone: quotation.contactPhone,
+      contactEmail: quotation.contactEmail,
+      authorName: quotation.authorName,
+      authorPosition: quotation.authorPosition,
+      authorPhone: quotation.authorPhone,
+      authorEmail: quotation.authorEmail,
+      supplyAmount: quotation.supplyAmount,
+      taxAmount: quotation.taxAmount,
+      totalAmount: quotation.totalAmount,
+      items: quotation.items.map(i => ({ name: i.name, spec: i.spec, unit: i.unit, quantity: i.quantity, unitPrice: i.unitPrice, amount: i.amount, remark: i.remark })),
+    });
+
+    const filename = encodeURIComponent(`견적서_${quotation.quotationNo}.pdf`);
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `inline; filename*=UTF-8''${filename}`);
+    res.send(buffer);
+  } catch (e) {
+    console.error('downloadQuotationPdf error:', e);
+    return error(res, 'INTERNAL', 'PDF 생성에 실패했습니다', 500);
   }
 }
 

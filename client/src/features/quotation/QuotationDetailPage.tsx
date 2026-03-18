@@ -13,6 +13,7 @@ import {
   Trash2,
   Mail,
   Printer,
+  FileText as FileTextIcon,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import SendMailModal from './SendMailModal';
@@ -326,6 +327,13 @@ export default function QuotationDetailPage() {
                 매출 견적서 생성
               </button>
             )}
+            <button
+              onClick={() => window.open(`/api/quotations/${id}/pdf`, '_blank')}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 text-sm font-medium rounded-xl bg-white/60 text-slate-600 border border-slate-200 hover:bg-slate-50 transition"
+            >
+              <FileTextIcon className="w-4 h-4" strokeWidth={1.75} />
+              PDF 보기
+            </button>
             <button
               onClick={async () => {
                 try {
