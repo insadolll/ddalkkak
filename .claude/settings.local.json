@@ -47,7 +47,9 @@
       "Bash(git push:*)",
       "Bash(sqlite3 prisma/dev.db \"SELECT * FROM departments;\")",
       "Bash(PGPASSWORD='ddalkkak2026' psql -h 127.0.0.1 -U ddalkkak -d ddalkkak -c \"SELECT email, \\\\\"smtpPassword\\\\\" FROM employees WHERE \\\\\"smtpPassword\\\\\" IS NOT NULL LIMIT 5;\" 2>&1)",
-      "Bash(python3 -c \":*)"
+      "Bash(python3 -c \":*)",
+      "Bash(grep -n \"pdf\\\\|PDF\\\\|인쇄\\\\|print\" /home/one-desk/client/src/features/quotation/*.tsx)",
+      "Bash(grep -n \"결제조건\\\\|paymentTerms\" /home/one-desk/client/src/features/quotation/*.tsx)"
     ]
   }
 }

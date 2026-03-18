@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft,
   Pencil,
+  Trash2,
   Building2,
   Truck,
   User,
@@ -263,13 +264,26 @@ export default function ProjectDetailPage() {
               {STATUS_LABELS[project.status] || project.status}
             </span>
           </div>
-          <button
-            onClick={() => setShowEdit(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-white/80 backdrop-blur-xl border border-white/30 rounded-xl text-sm font-medium text-slate-600 hover:bg-white hover:text-[#078080] hover:border-[#078080]/20 transition-all shadow-sm"
-          >
-            <Pencil className="w-4 h-4" strokeWidth={1.75} />
-            수정
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowEdit(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-white/80 backdrop-blur-xl border border-white/30 rounded-xl text-sm font-medium text-slate-600 hover:bg-white hover:text-[#078080] hover:border-[#078080]/20 transition-all shadow-sm"
+            >
+              <Pencil className="w-4 h-4" strokeWidth={1.75} />
+              수정
+            </button>
+            <button
+              onClick={async () => {
+                if (!window.confirm('이 프로젝트를 삭제하시겠습니까?')) return;
+                try { await api.delete(`/projects/${id}`); navigate('/projects'); }
+                catch { alert('삭제에 실패했습니다. 견적서가 연결된 프로젝트는 삭제할 수 없습니다.'); }
+              }}
+              className="flex items-center gap-2 px-4 py-2 bg-red-50 border border-red-200 rounded-xl text-sm font-medium text-red-500 hover:bg-red-100 transition-all shadow-sm"
+            >
+              <Trash2 className="w-4 h-4" strokeWidth={1.75} />
+              삭제
+            </button>
+          </div>
         </div>
       </div>
 

@@ -4,7 +4,6 @@ import {
   ArrowLeft,
   CheckCircle2,
   XCircle,
-  Copy,
   GitBranch,
   ShoppingCart,
   ChevronDown,
@@ -181,18 +180,6 @@ export default function QuotationDetailPage() {
     }
   }
 
-  async function handleDuplicate() {
-    if (!data || actionLoading) return;
-    setActionLoading(true);
-    try {
-      const res = await api.post(`/quotations/${data.id}/duplicate`);
-      navigate(`/quotations/${res.data.data.id}`);
-    } catch {
-      alert('복제에 실패했습니다.');
-    } finally {
-      setActionLoading(false);
-    }
-  }
 
   async function handleGenerateSales() {
     if (!data || actionLoading) return;
@@ -323,14 +310,6 @@ export default function QuotationDetailPage() {
                 리비전
               </button>
             )}
-            <button
-              onClick={handleDuplicate}
-              disabled={actionLoading}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 text-sm font-medium rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-200 transition disabled:opacity-50"
-            >
-              <Copy className="w-4 h-4" strokeWidth={1.75} />
-              복제
-            </button>
             {canGenerateSales && (
               <button
                 onClick={handleGenerateSales}
