@@ -10,6 +10,12 @@ import QuotationListPage from '@/features/quotation/QuotationListPage';
 import QuotationDetailPage from '@/features/quotation/QuotationDetailPage';
 import AccountingPage from '@/features/accounting/AccountingPage';
 import EmployeeListPage from '@/features/settings/EmployeeListPage';
+import DepartmentPage from '@/features/settings/DepartmentPage';
+import CalendarPage from '@/features/calendar/CalendarPage';
+import LeavePage from '@/features/leave/LeavePage';
+import ApprovalPage from '@/features/approval/ApprovalPage';
+import MeetingPage from '@/features/meeting/MeetingPage';
+import SuggestionPage from '@/features/suggestion/SuggestionPage';
 
 function PlaceholderPage({ title }: { title: string }) {
   return (
@@ -52,19 +58,23 @@ export default function App() {
             />
             <Route
               path="/calendar"
-              element={<PlaceholderPage title="일정공유" />}
+              element={<CalendarPage />}
+            />
+            <Route
+              path="/leaves"
+              element={<LeavePage />}
             />
             <Route
               path="/approvals"
-              element={<PlaceholderPage title="전자결재" />}
+              element={<ApprovalPage />}
             />
             <Route
               path="/meetings"
-              element={<PlaceholderPage title="업무회의" />}
+              element={<MeetingPage />}
             />
             <Route
               path="/suggestions"
-              element={<PlaceholderPage title="건의게시판" />}
+              element={<SuggestionPage />}
             />
             <Route
               path="/database"
@@ -73,6 +83,10 @@ export default function App() {
             <Route
               path="/settings/employees"
               element={<EmployeeListPage />}
+            />
+            <Route
+              path="/settings/departments"
+              element={<DepartmentPage />}
             />
           </Route>
         </Routes>

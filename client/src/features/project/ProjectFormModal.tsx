@@ -6,17 +6,17 @@ import api from '@/services/api';
 /* ── Types ── */
 
 interface Company {
-  id: number;
+  id: string;
   name: string;
   code?: string;
 }
 
 interface ProjectData {
-  id: number;
+  id: string;
   name: string;
-  client: { id: number; name: string } | null;
-  supplier: { id: number; name: string } | null;
-  manager: { id: number; name: string } | null;
+  client: { id: string; name: string } | null;
+  supplier: { id: string; name: string } | null;
+  manager: { id: string; name: string } | null;
   startDate: string | null;
   endDate: string | null;
   memo: string | null;
@@ -34,10 +34,10 @@ export default function ProjectFormModal({ project, onClose, onSaved }: Props) {
   const isEdit = !!project;
 
   const [name, setName] = useState(project?.name || '');
-  const [clientId, setClientId] = useState<number | ''>(
+  const [clientId, setClientId] = useState<string>(
     project?.client?.id ?? '',
   );
-  const [supplierId, setSupplierId] = useState<number | ''>(
+  const [supplierId, setSupplierId] = useState<string>(
     project?.supplier?.id ?? '',
   );
   const [managerName, setManagerName] = useState(
@@ -159,7 +159,7 @@ export default function ProjectFormModal({ project, onClose, onSaved }: Props) {
               <select
                 value={clientId}
                 onChange={(e) =>
-                  setClientId(e.target.value ? Number(e.target.value) : '')
+                  setClientId(e.target.value)
                 }
                 className="w-full px-4 py-2.5 bg-white/80 border border-slate-200 rounded-xl text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#078080]/30 focus:border-[#078080]/40 transition-all appearance-none"
               >
@@ -176,7 +176,7 @@ export default function ProjectFormModal({ project, onClose, onSaved }: Props) {
               <select
                 value={supplierId}
                 onChange={(e) =>
-                  setSupplierId(e.target.value ? Number(e.target.value) : '')
+                  setSupplierId(e.target.value)
                 }
                 className="w-full px-4 py-2.5 bg-white/80 border border-slate-200 rounded-xl text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#078080]/30 focus:border-[#078080]/40 transition-all appearance-none"
               >

@@ -20,23 +20,24 @@ import {
 } from 'lucide-react';
 import api from '@/services/api';
 import ProjectFormModal from './ProjectFormModal';
+import QuotationDropZone from '@/components/QuotationDropZone';
 
 /* ── Types ── */
 
 interface CompanyRef {
-  id: number;
+  id: string;
   name: string;
   code?: string;
 }
 
 interface ManagerRef {
-  id: number;
+  id: string;
   name: string;
   position: string;
 }
 
 interface Quotation {
-  id: number;
+  id: string;
   quotationNo: string;
   type: string;
   counterpartName: string;
@@ -47,14 +48,14 @@ interface Quotation {
 }
 
 interface Memo {
-  id: number;
+  id: string;
   content: string;
   createdAt: string;
-  author: { id: number; name: string } | null;
+  author: { id: string; name: string } | null;
 }
 
 interface ProjectDetail {
-  id: number;
+  id: string;
   name: string;
   status: string;
   stage: string;
@@ -513,6 +514,13 @@ export default function ProjectDetailPage() {
               ))}
             </div>
           )}
+
+          {/* Drag & Drop zone */}
+          <QuotationDropZone
+            projectId={project.id}
+            direction={quotationTab as 'SALES' | 'PURCHASE'}
+            onLinked={fetchProject}
+          />
         </div>
       </div>
 
