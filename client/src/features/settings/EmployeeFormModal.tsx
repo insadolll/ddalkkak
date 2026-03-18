@@ -27,7 +27,7 @@ export default function EmployeeFormModal({ employee, onClose, onSaved }: Props)
     employeeNo: '', email: '', password: '', name: '',
     role: 'EMPLOYEE', position: '', phone: '',
     ourCompanyId: '', departmentId: '', joinDate: '',
-    isActive: true,
+    isActive: true, smtpPassword: '',
   });
   const [companies, setCompanies] = useState<{ id: string; code: string; name: string }[]>([]);
   const [departments, setDepartments] = useState<{ id: string; name: string }[]>([]);
@@ -52,6 +52,7 @@ export default function EmployeeFormModal({ employee, onClose, onSaved }: Props)
         ourCompanyId: employee.ourCompany.id,
         departmentId: employee.department.id,
         joinDate: '',
+        smtpPassword: '',
         isActive: employee.isActive,
       });
     }
@@ -80,6 +81,7 @@ export default function EmployeeFormModal({ employee, onClose, onSaved }: Props)
           departmentId: form.departmentId, isActive: form.isActive,
         };
         if (form.password) data.password = form.password;
+        if (form.smtpPassword) data.smtpPassword = form.smtpPassword;
         await api.put(`/employees/${employee.id}`, data);
       } else {
         await api.post('/employees', {
@@ -87,6 +89,7 @@ export default function EmployeeFormModal({ employee, onClose, onSaved }: Props)
           name: form.name, role: form.role, position: form.position || null,
           phone: form.phone || null, ourCompanyId: form.ourCompanyId,
           departmentId: form.departmentId, joinDate: form.joinDate || undefined,
+          smtpPassword: form.smtpPassword || undefined,
         });
       }
       onSaved();
@@ -129,6 +132,7 @@ export default function EmployeeFormModal({ employee, onClose, onSaved }: Props)
           </div>
           <Field label="직위" value={form.position} onChange={v => set('position', v)} />
           <Field label="전화번호" value={form.phone} onChange={v => set('phone', v)} />
+          <Field label="메일 비밀번호 (SMTP)" value={form.smtpPassword} onChange={v => set('smtpPassword', v)} type="password" placeholder="메일 발송용" />
           {!isEdit && <Field label="입사일" value={form.joinDate} onChange={v => set('joinDate', v)} type="date" />}
           <div>
             <label className="block text-xs font-medium text-slate-500 mb-1">소속 회사 *</label>
