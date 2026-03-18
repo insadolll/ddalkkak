@@ -12,6 +12,7 @@ import {
   Download,
   Trash2,
   Mail,
+  Printer,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import SendMailModal from './SendMailModal';
@@ -50,7 +51,7 @@ interface LinkedQuotation {
 }
 
 interface QuotationDetail {
-  id: number;
+  id: string;
   quotationNo: string;
   direction: 'SALES' | 'PURCHASE';
   title: string;
@@ -64,15 +65,20 @@ interface QuotationDetail {
   validUntil: string | null;
   paymentTerms: string | null;
   defaultTaxRate: number;
-  counterpart: { id: number; name: string } | null;
-  project: { id: number; name: string } | null;
-  ourCompany: { id: number; code: string; name: string };
-  author: { id: number; name: string };
+  contactName: string | null;
+  contactEmail: string | null;
+  authorName: string | null;
+  authorPosition: string | null;
+  authorEmail: string | null;
+  counterpart: { id: string; name: string } | null;
+  project: { id: string; name: string } | null;
+  ourCompany: { id: string; code: string; name: string };
+  author: { id: string; name: string; position?: string };
   items: QuotationItem[];
   revisions: RevisionRecord[];
   sourceQuotation: LinkedQuotation | null;
   derivedQuotations: LinkedQuotation[];
-  purchaseOrder: { id: number } | null;
+  purchaseOrder: { id: string } | null;
 }
 
 /* ------------------------------------------------------------------ */
@@ -116,6 +122,8 @@ export default function QuotationDetailPage() {
   const { user } = useAuth();
 
   const [showMailModal, setShowMailModal] = useState(false);
+  const [showRevisionModal, setShowRevisionModal] = useState(false);
+  const [revisionNote, setRevisionNote] = useState('');
   const [data, setData] = useState<QuotationDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -300,9 +308,7 @@ export default function QuotationDetailPage() {
             )}
             {canRevision && (
               <button
-                onClick={() =>
-                  navigate(`/quotations?revision=${data.id}`)
-                }
+                onClick={() => { setRevisionNote(''); setShowRevisionModal(true); }}
                 disabled={actionLoading}
                 className="inline-flex items-center gap-1.5 px-3.5 py-2 text-sm font-medium rounded-xl bg-amber-50 text-amber-700 hover:bg-amber-100 transition disabled:opacity-50"
               >
@@ -340,6 +346,13 @@ export default function QuotationDetailPage() {
               엑셀 다운로드
             </button>
             <button
+              onClick={() => window.print()}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 text-sm font-medium rounded-xl bg-white/60 text-slate-600 border border-slate-200 hover:bg-slate-50 transition"
+            >
+              <Printer className="w-4 h-4" strokeWidth={1.75} />
+              인쇄
+            </button>
+            <button
               onClick={() => setShowMailModal(true)}
               className="inline-flex items-center gap-1.5 px-3.5 py-2 text-sm font-medium rounded-xl bg-blue-50 text-blue-600 hover:bg-blue-100 transition"
             >
@@ -366,9 +379,12 @@ export default function QuotationDetailPage() {
           <InfoCell label="유효기한" value={fmtDate(data.validUntil)} />
           <InfoCell label="결제조건" value={data.paymentTerms || '-'} />
           <InfoCell label="거래처" value={data.counterpart?.name || '-'} />
+          <InfoCell label="담당자" value={data.contactName || '-'} />
+          <InfoCell label="담당자 이메일" value={data.contactEmail || '-'} />
           <InfoCell label="프로젝트" value={data.project?.name || '-'} />
-          <InfoCell label="작성자" value={data.author.name} />
-          <InfoCell label="회사" value={data.ourCompany.name} />
+          <InfoCell label="작성자" value={`${data.authorName || data.author?.name || '-'}${data.authorPosition ? ` (${data.authorPosition})` : ''}`} />
+          <InfoCell label="작성자 이메일" value={data.authorEmail || '-'} />
+          <InfoCell label="회사" value={data.ourCompany?.name || '-'} />
         </div>
       </div>
 
@@ -533,6 +549,46 @@ export default function QuotationDetailPage() {
           onClose={() => setShowMailModal(false)}
           onSent={() => { setShowMailModal(false); alert('메일이 발송되었습니다.'); window.location.reload(); }}
         />
+      )}
+
+      {/* Revision modal */}
+      {showRevisionModal && data && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowRevisionModal(false)} />
+          <div className="relative bg-white/95 backdrop-blur-2xl rounded-[20px] shadow-2xl w-full max-w-sm p-6 space-y-4">
+            <h3 className="text-lg font-bold text-slate-800">새 리비전 생성</h3>
+            <p className="text-sm text-slate-500">현재 견적서 내용을 스냅샷으로 저장하고, Rev.{data.revision + 1}로 업데이트합니다.</p>
+            <div>
+              <label className="block text-xs font-medium text-slate-500 mb-1">변경 사유</label>
+              <input type="text" value={revisionNote} onChange={e => setRevisionNote(e.target.value)} placeholder="예: 단가 변경, 품목 추가" className="w-full px-3 py-2.5 bg-white/60 border border-gray-200 rounded-[10px] text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none" autoFocus />
+            </div>
+            <div className="flex justify-end gap-2">
+              <button onClick={() => setShowRevisionModal(false)} className="px-4 py-2 rounded-xl text-sm text-slate-500 hover:bg-slate-100 transition">취소</button>
+              <button
+                onClick={async () => {
+                  try {
+                    setActionLoading(true);
+                    await api.post(`/quotations/${data.id}/revision`, {
+                      changeNote: revisionNote || '리비전 생성',
+                      items: data.items.map((i) => ({
+                        name: i.name, spec: i.spec, unit: i.unit,
+                        quantity: i.quantity, unitPrice: i.unitPrice,
+                        taxRate: i.taxRate, remark: i.remark,
+                      })),
+                    });
+                    setShowRevisionModal(false);
+                    window.location.reload();
+                  } catch { alert('리비전 생성에 실패했습니다.'); }
+                  setActionLoading(false);
+                }}
+                disabled={actionLoading}
+                className="px-4 py-2 rounded-xl text-sm font-medium bg-amber-500 text-white hover:bg-amber-600 transition disabled:opacity-50"
+              >
+                {actionLoading ? '생성 중...' : '리비전 생성'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
