@@ -550,9 +550,9 @@ export default function QuotationDetailPage() {
         <SendMailModal
           quotationId={data.id as unknown as string}
           quotationNo={data.quotationNo}
-          contactEmail={data.contactEmail}
+          contactEmail={(data as unknown as Record<string, string>).contactEmail ?? ''}
           onClose={() => setShowMailModal(false)}
-          onSent={() => { setShowMailModal(false); alert('메일이 발송되었습니다.'); fetchData(); }}
+          onSent={() => { setShowMailModal(false); alert('메일이 발송되었습니다.'); window.location.reload(); }}
         />
       )}
     </div>

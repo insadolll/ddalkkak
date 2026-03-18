@@ -5,9 +5,11 @@ import {
   listCompanies, getCompany, createCompany, updateCompany, deleteCompany,
   createContact, updateContact, deleteContact,
 } from './company.controller';
+import { lookupCompanies } from './company-lookup';
 
 const router = Router();
 
+router.get('/lookup', authenticate, lookupCompanies);
 router.get('/', authenticate, listCompanies);
 router.get('/:id', authenticate, getCompany);
 router.post('/', authenticate, requireRole('ADMIN', 'MANAGER'), createCompany);

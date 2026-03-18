@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import type { FormEvent } from 'react';
-import { X, Loader2 } from 'lucide-react';
+import { X, Loader2, Search } from 'lucide-react';
 import api from '@/services/api';
+import CompanyLookupModal from '@/components/CompanyLookupModal';
 
 /* ── Types ── */
 
@@ -55,6 +56,7 @@ export default function ProjectFormModal({ project, onClose, onSaved }: Props) {
   const [employees, setEmployees] = useState<{ id: string; name: string; position: string | null }[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState('');
+  const [showLookup, setShowLookup] = useState<'client' | 'supplier' | null>(null);
 
   useEffect(() => {
     api.get('/employees', { params: { limit: 200 } })
@@ -161,37 +163,39 @@ export default function ProjectFormModal({ project, onClose, onSaved }: Props) {
           {/* Client / Supplier in row */}
           <div className="grid grid-cols-2 gap-4">
             <FieldWrapper label="고객사">
-              <select
-                value={clientId}
-                onChange={(e) =>
-                  setClientId(e.target.value)
-                }
-                className="w-full px-4 py-2.5 bg-white/80 border border-slate-200 rounded-xl text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#078080]/30 focus:border-[#078080]/40 transition-all appearance-none"
-              >
-                <option value="">선택하세요</option>
-                {companies.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
+              <div className="flex gap-1.5">
+                <select
+                  value={clientId}
+                  onChange={(e) => setClientId(e.target.value)}
+                  className="flex-1 px-3 py-2.5 bg-white/80 border border-slate-200 rounded-xl text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#078080]/30 focus:border-[#078080]/40 transition-all appearance-none"
+                >
+                  <option value="">선택하세요</option>
+                  {companies.map((c) => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+                </select>
+                <button type="button" onClick={() => setShowLookup('client')} className="px-2.5 py-2.5 rounded-xl bg-primary/10 text-primary hover:bg-primary/20 transition" title="공공데이터 검색">
+                  <Search className="w-4 h-4" strokeWidth={1.75} />
+                </button>
+              </div>
             </FieldWrapper>
 
             <FieldWrapper label="매입처">
-              <select
-                value={supplierId}
-                onChange={(e) =>
-                  setSupplierId(e.target.value)
-                }
-                className="w-full px-4 py-2.5 bg-white/80 border border-slate-200 rounded-xl text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#078080]/30 focus:border-[#078080]/40 transition-all appearance-none"
-              >
-                <option value="">선택하세요</option>
-                {companies.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
+              <div className="flex gap-1.5">
+                <select
+                  value={supplierId}
+                  onChange={(e) => setSupplierId(e.target.value)}
+                  className="flex-1 px-3 py-2.5 bg-white/80 border border-slate-200 rounded-xl text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#078080]/30 focus:border-[#078080]/40 transition-all appearance-none"
+                >
+                  <option value="">선택하세요</option>
+                  {companies.map((c) => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+                </select>
+                <button type="button" onClick={() => setShowLookup('supplier')} className="px-2.5 py-2.5 rounded-xl bg-primary/10 text-primary hover:bg-primary/20 transition" title="공공데이터 검색">
+                  <Search className="w-4 h-4" strokeWidth={1.75} />
+                </button>
+              </div>
             </FieldWrapper>
           </div>
 
@@ -264,6 +268,38 @@ export default function ProjectFormModal({ project, onClose, onSaved }: Props) {
             </button>
           </div>
         </form>
+
+        {showLookup && (
+          <CompanyLookupModal
+            onClose={() => setShowLookup(null)}
+            onSelect={async (result) => {
+              // Auto-create company from lookup result
+              try {
+                const res = await api.post('/companies', {
+                  name: result.name,
+                  bizNumber: result.bizNumber || undefined,
+                  representative: result.representative || undefined,
+                  address: result.address || undefined,
+                  phone: result.phone || undefined,
+                });
+                const newCompany = res.data.data;
+                setCompanies(prev => [...prev, newCompany]);
+                if (showLookup === 'client') setClientId(newCompany.id);
+                else setSupplierId(newCompany.id);
+              } catch {
+                // Company might already exist, try to find it
+                const existing = companies.find(c => c.name === result.name);
+                if (existing) {
+                  if (showLookup === 'client') setClientId(existing.id);
+                  else setSupplierId(existing.id);
+                } else {
+                  alert('거래처 등록에 실패했습니다.');
+                }
+              }
+              setShowLookup(null);
+            }}
+          />
+        )}
       </div>
     </div>
   );
