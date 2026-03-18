@@ -11,7 +11,9 @@ import {
   ChevronUp,
   ExternalLink,
   Download,
+  Trash2,
 } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
 import api from '@/services/api';
 
 /* ------------------------------------------------------------------ */
@@ -110,6 +112,7 @@ function fmtDate(d: string | null): string {
 export default function QuotationDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   const [data, setData] = useState<QuotationDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -156,6 +159,20 @@ export default function QuotationDetailPage() {
       fetchDetail();
     } catch {
       alert('폐기에 실패했습니다.');
+    } finally {
+      setActionLoading(false);
+    }
+  }
+
+  async function handleDelete() {
+    if (!data || actionLoading) return;
+    if (!window.confirm('이 견적서를 삭제하시겠습니까? 되돌릴 수 없습니다.')) return;
+    setActionLoading(true);
+    try {
+      await api.delete(`/quotations/${data.id}`);
+      navigate('/quotations');
+    } catch {
+      alert('삭제에 실패했습니다. 확정된 견적서는 삭제할 수 없습니다.');
     } finally {
       setActionLoading(false);
     }
@@ -340,6 +357,16 @@ export default function QuotationDetailPage() {
               <Download className="w-4 h-4" strokeWidth={1.75} />
               엑셀 다운로드
             </button>
+            {user?.role === 'ADMIN' && !data.isConfirmed && data.status !== 'VOID' && (
+              <button
+                onClick={handleDelete}
+                disabled={actionLoading}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 text-sm font-medium rounded-xl bg-red-50 text-red-600 hover:bg-red-100 transition disabled:opacity-50"
+              >
+                <Trash2 className="w-4 h-4" strokeWidth={1.75} />
+                삭제
+              </button>
+            )}
           </div>
         </div>
 

@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 
 interface OurCompany {
-  id: number;
+  id: string;
   code: string;
   name: string;
 }
@@ -70,7 +70,7 @@ export default function Layout() {
         // Restore previously selected company or default to user's company
         const savedId = localStorage.getItem('selectedCompanyId');
         const initial =
-          list.find((c) => c.id === Number(savedId)) ||
+          list.find((c) => c.id === savedId) ||
           list.find((c) => c.id === user?.ourCompanyId) ||
           list[0];
 

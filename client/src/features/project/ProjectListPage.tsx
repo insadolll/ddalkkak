@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/hooks/useAuth';
 import {
   Search,
   Plus,
@@ -105,6 +106,7 @@ function formatDate(iso: string | null): string {
 
 export default function ProjectListPage() {
   const navigate = useNavigate();
+  const { selectedCompanyId } = useAuth();
 
   const [projects, setProjects] = useState<Project[]>([]);
   const [pagination, setPagination] = useState<Pagination>({
@@ -149,7 +151,7 @@ export default function ProjectListPage() {
 
   useEffect(() => {
     fetchProjects(1);
-  }, [fetchProjects]);
+  }, [fetchProjects, selectedCompanyId]);
 
   // Debounced search
   useEffect(() => {

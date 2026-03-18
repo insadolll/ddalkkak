@@ -15,9 +15,10 @@ interface AuthContextValue {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  selectedCompanyId: string | null;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
-  switchCompany: (companyId: number) => void;
+  switchCompany: (companyId: string) => void;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -25,6 +26,9 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(
+    localStorage.getItem('selectedCompanyId'),
+  );
 
   // Restore session on mount
   useEffect(() => {
@@ -67,10 +71,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
   }, []);
 
-  const switchCompany = useCallback((companyId: number) => {
-    // Update x-company-id for subsequent API calls
+  const switchCompany = useCallback((companyId: string) => {
     api.defaults.headers.common['x-company-id'] = companyId;
-    localStorage.setItem('selectedCompanyId', String(companyId));
+    localStorage.setItem('selectedCompanyId', companyId);
+    setSelectedCompanyId(companyId); // triggers re-render in consuming components
   }, []);
 
   const value = useMemo<AuthContextValue>(
@@ -78,11 +82,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       user,
       isAuthenticated: !!user,
       isLoading,
+      selectedCompanyId,
       login,
       logout,
       switchCompany,
     }),
-    [user, isLoading, login, logout, switchCompany],
+    [user, isLoading, selectedCompanyId, login, logout, switchCompany],
   );
 
   return createElement(AuthContext.Provider, { value }, children);

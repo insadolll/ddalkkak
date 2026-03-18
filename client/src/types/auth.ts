@@ -1,12 +1,14 @@
 export interface User {
-  id: number;
+  id: string;
   email: string;
   name: string;
   role: 'ADMIN' | 'MANAGER' | 'ACCOUNTANT' | 'EMPLOYEE';
   position: string;
-  ourCompanyId: number;
+  ourCompanyId: string;
   ourCompanyCode: string;
   ourCompanyName: string;
+  departmentId?: string;
+  departmentName?: string;
 }
 
 export interface LoginResponse {

@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useAuth } from '@/hooks/useAuth';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Plus,
@@ -81,6 +82,7 @@ function formatAmount(n: number): string {
 export default function QuotationListPage() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  const { selectedCompanyId } = useAuth();
 
   const [quotations, setQuotations] = useState<QuotationListItem[]>([]);
   const [pagination, setPagination] = useState<Pagination>({
@@ -141,7 +143,7 @@ export default function QuotationListPage() {
     return () => {
       cancelled = true;
     };
-  }, [direction, status, search, page]);
+  }, [direction, status, search, page, selectedCompanyId]);
 
   /* ---- Search debounce ---- */
   const [searchInput, setSearchInput] = useState(search);
