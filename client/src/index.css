@@ -1,0 +1,29 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-primary: #078080;
+  --color-primary-light: #0D9488;
+  --color-primary-dark: #065F5F;
+  --color-accent: #F45D48;
+  --color-accent-light: #F97316;
+  --color-surface: #F8F5F2;
+  --color-card: rgba(255, 255, 255, 0.80);
+  --color-card-solid: #FFFFFF;
+  --color-text-primary: #0F172A;
+  --color-text-secondary: #475569;
+  --color-text-muted: #64748B;
+}
+
+body {
+  font-family: 'Pretendard Variable', 'Pretendard', 'Inter', system-ui, sans-serif;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
