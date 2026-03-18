@@ -30,6 +30,7 @@ interface OurCompany {
 const menuItems = [
   { to: '/projects', label: '프로젝트 관리', icon: FolderKanban },
   { to: '/quotations', label: '견적서', icon: FileText },
+  { to: '/companies', label: '거래처 관리', icon: Building2 },
   { to: '/accounting', label: '매입매출', icon: ArrowLeftRight },
   { to: '/calendar', label: '일정공유', icon: Calendar },
   { to: '/leaves', label: '휴가 관리', icon: Palmtree },
@@ -43,6 +44,7 @@ const pageTitles: Record<string, string> = {
   '/': '대시보드',
   '/projects': '프로젝트 관리',
   '/quotations': '견적서',
+  '/companies': '거래처 관리',
   '/accounting': '매입매출',
   '/calendar': '일정공유',
   '/leaves': '휴가 관리',

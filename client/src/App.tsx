@@ -9,6 +9,7 @@ import ProjectDetailPage from '@/features/project/ProjectDetailPage';
 import QuotationListPage from '@/features/quotation/QuotationListPage';
 import QuotationDetailPage from '@/features/quotation/QuotationDetailPage';
 import AccountingPage from '@/features/accounting/AccountingPage';
+import CompanyListPage from '@/features/company/CompanyListPage';
 import EmployeeListPage from '@/features/settings/EmployeeListPage';
 import DepartmentPage from '@/features/settings/DepartmentPage';
 import CalendarPage from '@/features/calendar/CalendarPage';
@@ -55,6 +56,10 @@ export default function App() {
             <Route
               path="/accounting"
               element={<AccountingPage />}
+            />
+            <Route
+              path="/companies"
+              element={<CompanyListPage />}
             />
             <Route
               path="/calendar"
