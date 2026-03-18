@@ -8,6 +8,7 @@ import ProjectListPage from '@/features/project/ProjectListPage';
 import ProjectDetailPage from '@/features/project/ProjectDetailPage';
 import QuotationListPage from '@/features/quotation/QuotationListPage';
 import QuotationDetailPage from '@/features/quotation/QuotationDetailPage';
+import AccountingPage from '@/features/accounting/AccountingPage';
 
 function PlaceholderPage({ title }: { title: string }) {
   return (
@@ -46,7 +47,7 @@ export default function App() {
             />
             <Route
               path="/accounting"
-              element={<PlaceholderPage title="매입매출" />}
+              element={<AccountingPage />}
             />
             <Route
               path="/calendar"
