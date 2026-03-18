@@ -12,6 +12,7 @@ import authRoutes from './modules/auth/auth.routes';
 import ourCompanyRoutes from './modules/our-company/our-company.routes';
 import companyRoutes from './modules/company/company.routes';
 import projectRoutes from './modules/project/project.routes';
+import quotationRoutes from './modules/quotation/quotation.routes';
 
 const app = express();
 const PORT = parseInt(process.env.PORT || '3001', 10);
@@ -43,6 +44,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/our-companies', ourCompanyRoutes);
 app.use('/api/companies', companyRoutes);
 app.use('/api/projects', projectRoutes);
+app.use('/api/quotations', quotationRoutes);
 
 // Serve static files (client build) in production
 if (process.env.NODE_ENV === 'production') {
